@@ -16,6 +16,9 @@ properties = [
     'ID_INPUT_KEYBOARD',
     'ID_INPUT_MOUSE',
     'ID_INPUT_TOUCHPAD',
+    'ID_INPUT_TABLET',
+    'ID_INPUT_TOUCHSCREEN',
+    'ID_INPUT_JOYSTICK',
 ]
 required = [
     'ID_VENDOR_ID',
@@ -27,6 +30,9 @@ one_of = [
     'ID_INPUT_KEYBOARD',
     'ID_INPUT_MOUSE',
     'ID_INPUT_TOUCHPAD',
+    'ID_INPUT_TABLET',
+    'ID_INPUT_TOUCHSCREEN',
+    'ID_INPUT_JOYSTICK',
 ]
 for device in context.list_devices(subsystem='input'):
     device_data = {k: device.get(k) or '' for k in properties}
