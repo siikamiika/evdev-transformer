@@ -3,3 +3,4 @@
 - network
 - hid emu
 - libinput gestures
+- fix duplicate uinput devices
