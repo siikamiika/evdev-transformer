@@ -5,21 +5,6 @@ import json
 import pyudev
 
 context = pyudev.Context()
-properties = [
-    'ID_VENDOR',
-    'ID_MODEL',
-    'ID_VENDOR_ID',
-    'ID_MODEL_ID',
-    'MAJOR',
-    'MINOR',
-    'DEVNAME',
-    'ID_INPUT_KEYBOARD',
-    'ID_INPUT_MOUSE',
-    'ID_INPUT_TOUCHPAD',
-    'ID_INPUT_TABLET',
-    'ID_INPUT_TOUCHSCREEN',
-    'ID_INPUT_JOYSTICK',
-]
 one_of = [
     'ID_INPUT_KEYBOARD',
     'ID_INPUT_MOUSE',
