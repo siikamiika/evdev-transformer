@@ -1,3 +1,5 @@
 - config
 - trigger reload
 - network
+- hid emu
+- libinput gestures
