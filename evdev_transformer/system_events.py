@@ -45,6 +45,7 @@ class InputDeviceMonitor:
         return None
 
     def _get_matching_device(self, rule):
+        # TODO sometimes https://github.com/pyudev/pyudev/issues/83
         context = pyudev.Context()
         for device in context.list_devices(subsystem='input'):
             if self._is_rule_device_match(device, rule):
