@@ -28,7 +28,6 @@ class InputContext:
                         yield 'remove', device, rule
                         break
 
-
     def _monitor(self):
         for action, udev_device, rule in self._device_monitor.events():
             if action == 'add':

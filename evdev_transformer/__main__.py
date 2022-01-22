@@ -1,4 +1,5 @@
 import threading
+import random
 
 import libevdev
 
@@ -28,7 +29,9 @@ def handle_device(device, rule):
     for events in device.events():
         print(deserialize_events(serialize_events(events)))
         uinput_device.send_events(events)
-        context.remove_monitored_attrs(logitech_k400)
+        if random.randint(0, 100) == 100:
+            context.remove_monitored_attrs(logitech_k400)
+            context.add_monitored_attrs(logitech_k400)
 
 for action, device, rule in context.events():
     print(action, device, rule)
