@@ -20,7 +20,7 @@ class DeviceGrabManager:
     def _sway_get_touchpad_identifier(self, device):
         sway_inputs = json.loads(subprocess.run(['swaymsg', '-t', 'get_inputs'], stdout=subprocess.PIPE).stdout)
         for sway_input in sway_inputs:
-            if all(device.id[k] == sway_input[k] for k in ['vendor', 'product']):
+            if all(device.id[k] == sway_input[k] for k in ['vendor', 'product']) and device.name == sway_input['name']:
                 if sway_input['type'] == 'touchpad':
                     return sway_input['identifier']
         return None
