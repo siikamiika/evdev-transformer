@@ -3,7 +3,6 @@ import threading
 import libevdev
 
 from .system_events import InputDeviceMonitor
-from .grab import DeviceGrabManager
 
 device_monitor = InputDeviceMonitor()
 # device_monitor.add_monitored_attrs({
@@ -21,7 +20,7 @@ def forward_uinput(udev_device):
     def _reader():
         fd = open(udev_device.get('DEVNAME'), 'rb')
         libevdev_device = libevdev.Device(fd)
-        DeviceGrabManager(libevdev_device, udev_device).grab()
+        libevdev_device.grab()
         libevdev_device.name = (libevdev_device.name or '') + ' (Virtual)'
         uinput_device = libevdev_device.create_uinput_device()
         buf = []
