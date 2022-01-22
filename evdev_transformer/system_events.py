@@ -35,12 +35,11 @@ class InputDeviceMonitor:
                 yield device
 
     def _is_match(self, device):
-        # TODO exclude uinput
         for attributes in self._monitored:
             if (
                 all(device.get(k) == v for k, v in attributes.items())
-                and all(device.get(k) for k in ['DEVNAME', 'MAJOR', 'MINOR'])
-                and device.get('DEVNAME').startswith('/dev/input/event')
+                and device.get('DEVNAME', '').startswith('/dev/input/event')
+                and not device.get('DEVPATH', '').startswith('/devices/virtual/')
             ):
                 return True
         return False

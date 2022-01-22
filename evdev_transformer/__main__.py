@@ -13,8 +13,8 @@ device_monitor = InputDeviceMonitor()
 #   "ID_INPUT_MOUSE": "1",
 # })
 device_monitor.add_monitored_attrs({
-  "ID_VENDOR": "Apple_Inc.",
-  "ID_INPUT_TOUCHPAD": "1",
+    "ID_VENDOR": "Apple_Inc.",
+    "ID_INPUT_TOUCHPAD": "1",
 })
 
 def forward_uinput(udev_device):
