@@ -21,16 +21,20 @@ apple_magic_trackpad = {
 }
 
 context = InputContext()
-context.add_monitored_attrs(logitech_k400)
 context.add_monitored_attrs(apple_magic_trackpad)
 
+uinput_cache = {}
 def handle_device(device, rule):
-    uinput_device = device.create_uinput_device()
+    devname = device.get_fd_name()
+    print(devname in uinput_cache)
+    uinput_device = uinput_cache.get(devname, device.create_uinput_device())
+    uinput_cache[devname] = uinput_device
     for events in device.events():
         print(deserialize_events(serialize_events(events)))
         uinput_device.send_events(events)
         if random.randint(0, 100) == 100:
             context.remove_monitored_attrs(logitech_k400)
+        elif random.randint(0, 100) == 100:
             context.add_monitored_attrs(logitech_k400)
 
 for action, device, rule in context.events():
