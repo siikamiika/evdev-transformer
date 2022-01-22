@@ -27,8 +27,7 @@ class InputDeviceMonitor:
             for data in self._monitor():
                 self._event_queue.put(data)
         threading.Thread(target=_bg).start()
-        while True:
-            yield self._event_queue.get()
+        yield from iter(self._event_queue.get, None)
 
     def _monitor(self):
         context = pyudev.Context()
