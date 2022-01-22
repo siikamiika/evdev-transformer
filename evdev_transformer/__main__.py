@@ -26,7 +26,6 @@ context.add_monitored_attrs(apple_magic_trackpad)
 uinput_cache = {}
 def handle_device(device, rule):
     devname = device.get_fd_name()
-    print(devname in uinput_cache)
     uinput_device = uinput_cache.get(devname, device.create_uinput_device())
     uinput_cache[devname] = uinput_device
     for events in device.events():
