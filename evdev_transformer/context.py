@@ -1,3 +1,6 @@
+import threading
+import queue
+
 import libevdev
 
 from .system_events import InputDeviceMonitor
@@ -6,8 +9,27 @@ class InputContext:
     def __init__(self):
         self._devices = []
         self._device_monitor = InputDeviceMonitor()
+        self._event_queue = queue.Queue()
 
     def events(self):
+        def _bg():
+            for data in self._monitor():
+                self._event_queue.put(('monitor', data))
+        threading.Thread(target=_bg).start()
+        while True:
+            event_type, data = self._event_queue.get()
+            if event_type == 'monitor':
+                yield data
+            elif event_type == 'remove':
+                for device, rule in self._devices:
+                    if rule == data:
+                        self._devices.remove((device, rule))
+                        device.release()
+                        yield 'remove', device, rule
+                        break
+
+
+    def _monitor(self):
         for action, udev_device, rule in self._device_monitor.events():
             if action == 'add':
                 device = self._create_device(udev_device)
@@ -23,6 +45,7 @@ class InputContext:
 
     def remove_monitored_attrs(self, attrs):
         self._device_monitor.remove_monitored_attrs(attrs)
+        self._event_queue.put(('remove', attrs))
 
     def has_pressed_keys(self, keys, attrs=None):
         if attrs is not None:
@@ -41,9 +64,7 @@ class InputContext:
     def _create_device(self, udev_device):
         devname = udev_device.get('DEVNAME')
         fd = open(devname, 'rb')
-        libevdev_device = libevdev.Device(fd)
-        libevdev_device.grab()
-        return EvdevWrapper(libevdev_device)
+        return EvdevWrapper(libevdev.Device(fd))
 
     def _remove_device(self, udev_device, rule):
         devname = udev_device.get('DEVNAME')
@@ -56,7 +77,9 @@ class InputContext:
 class EvdevWrapper:
     def __init__(self, libevdev_device):
         self._device = libevdev_device
+        self._device.grab()
         self._pressed_keys = set()
+        self._stopped = False
 
     def get_fd_name(self):
         return self._device.fd.name
@@ -75,9 +98,15 @@ class EvdevWrapper:
         dev.name = (dev.name or 'Input Device') + ' (Virtual)'
         return dev.create_uinput_device()
 
+    def release(self):
+        self._device.ungrab()
+        self._stopped = True
+
     def events(self):
         buf = []
         for event in self._device.events():
+            if self._stopped:
+                break
             # skip repeat
             if event.matches(libevdev.EV_KEY, 2):
                 continue
