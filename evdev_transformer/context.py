@@ -53,6 +53,7 @@ class InputContext:
         return None
 
 class EvdevWrapper:
+    _uinput_cache = {}
     def __init__(self, libevdev_device):
         self._device = libevdev_device
         self._device.grab()
@@ -73,9 +74,13 @@ class EvdevWrapper:
 
     def create_uinput_device(self):
         devname = self.get_fd_name()
+        if devname in self._uinput_cache:
+            return self._uinput_cache[devname]
         dev = libevdev.Device(open(devname, 'rb'))
         dev.name = (dev.name or 'Input Device') + ' (Virtual)'
-        return dev.create_uinput_device()
+        uinput_device = dev.create_uinput_device()
+        self._uinput_cache[devname] = uinput_device
+        return uinput_device
 
     def release(self):
         self._device.ungrab()
