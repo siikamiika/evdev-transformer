@@ -20,12 +20,6 @@ properties = [
     'ID_INPUT_TOUCHSCREEN',
     'ID_INPUT_JOYSTICK',
 ]
-required = [
-    'ID_VENDOR_ID',
-    'ID_MODEL_ID',
-    'MAJOR',
-    'MINOR',
-]
 one_of = [
     'ID_INPUT_KEYBOARD',
     'ID_INPUT_MOUSE',
@@ -35,10 +29,10 @@ one_of = [
     'ID_INPUT_JOYSTICK',
 ]
 for device in context.list_devices(subsystem='input'):
-    device_data = {k: device.get(k) or '' for k in properties}
+    device_data = {k: device.get(k, '') for k in device.properties}
     if (
-        all(device_data[k] for k in required)
-        and device_data['DEVNAME'].startswith('/dev/input/event')
-        and any(device_data[k] for k in one_of)
+        device_data.get('DEVNAME', '').startswith('/dev/input/event')
+        and not device_data.get('DEVPATH', '').startswith('/devices/virtual/')
+        and any(device_data.get(k) for k in one_of)
     ):
         print(json.dumps(device_data))
