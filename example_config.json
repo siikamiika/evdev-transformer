@@ -81,7 +81,7 @@
                     }
                 },
                 {
-                    "type": "hotkey_cycle",
+                    "type": "hotkey",
                     "hotkey": {
                         "key": "KEY_TAB",
                         "modifiers": [
@@ -97,7 +97,7 @@
             "sort_order": 1,
             "activators": [
                 {
-                    "type": "hotkey_cycle",
+                    "type": "hotkey",
                     "hotkey": {
                         "key": "KEY_TAB",
                         "modifiers": [
