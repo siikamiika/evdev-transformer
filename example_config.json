@@ -67,7 +67,6 @@
         {
             "source_group": "Unholy Alliance",
             "destination": "Master",
-            "sort_order": 0,
             "activators": [
                 {
                     "type": "script",
@@ -94,7 +93,6 @@
         {
             "source_group": "Unholy Alliance",
             "destination": "Linux Chromebook",
-            "sort_order": 1,
             "activators": [
                 {
                     "type": "hotkey",
