@@ -115,7 +115,13 @@
     "destinations": [
         {
             "name": "Master",
-            "type": "uinput"
+            "type": "uinput",
+            "transforms": [
+                {
+                    "type": "script",
+                    "filename": "app_remaps.py"
+                }
+            ]
         },
         {
             "name": "Linux Chromebook",
