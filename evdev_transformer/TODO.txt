@@ -1,5 +1,8 @@
 - config
+- config graph -> generate node configs
+    - visual editor
 - trigger reload
 - network
 - hid emu
 - libinput gestures
+- handle multiple devices with same vendor/product
