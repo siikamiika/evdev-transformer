@@ -1,7 +1,8 @@
 from __future__ import annotations
 from typing import (
     List,
-    Dict
+    Dict,
+    Optional,
 )
 
 import libevdev
@@ -54,6 +55,9 @@ class Activator:
     def __init__(self, properties: Dict):
         self._properties = properties
         self._validate()
+
+    def __eq__(self, other):
+        self.to_dict() == other.to_dict()
 
     @classmethod
     def from_dict(cls, data: Dict) -> Activator:
@@ -271,6 +275,10 @@ class Link:
     def destination(self):
         return self._destination
 
+    @property
+    def activators(self):
+        return self._activators
+
     @classmethod
     def from_dict(cls, data) -> Link:
         return cls(
@@ -289,6 +297,10 @@ class Link:
     def _validate(self):
         assert isinstance(self._source_group, str)
         assert isinstance(self._destination, str)
+        activators = []
+        for activator in self._activators:
+            assert activator not in activators
+            activators.append(activator)
 
 class Config:
     _newest_version = 1
@@ -307,6 +319,67 @@ class Config:
         self._links = links
         self._destinations = destinations
         self._validate()
+        # state
+        # TODO store elsewhere?
+        self._current_links: List[Link] = []
+        self._init_state()
+
+    @property
+    def version(self) -> int:
+        return self._version
+
+    @property
+    def sources(self) -> List[Source]:
+        return self._sources
+
+    @property
+    def source_groups(self) -> List[SourceGroup]:
+        return self._source_groups
+
+    @property
+    def links(self) -> List[Link]:
+        return self._links
+
+    @property
+    def destinations(self) -> List[Destination]:
+        return self._destinations
+
+    def _init_state(self):
+        seen_source_groups = set()
+        for link in self._links:
+            if link.source_group in seen_source_groups:
+                continue
+            seen_source_groups.add(link.source_group)
+            # TODO generate event --> event listener for config state
+            self._current_links.append(link)
+
+    def activate_next_link(
+        self,
+        source_group: str,
+        activator: Optional[Activator] = None,
+    ):
+        current_link = None
+        for link in self._current_links:
+            if link.source_group == source_group:
+                current_link = link
+                break
+        else:
+            raise Exception('No active link for source group')
+        matches = [
+            l for l in self._links
+            if l.source_group == source_group and (
+                activator is None
+                or activator in l.activators
+            )
+        ]
+        if not matches:
+            raise Exception('No matches')
+        if current_link in matches:
+            new_idx = (matches.index(current_link) + 1) % len(matches)
+        else:
+            new_idx = 0
+        # TODO generate event --> event listener for config state
+        self._links[self._links.index(current_link)] = matches[new_idx]
 
     @classmethod
     def from_dict(cls, data: Dict) -> Config:
