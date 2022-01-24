@@ -91,8 +91,9 @@ class HotkeyActivator(Activator):
     def _validate(self):
         super()._validate()
         assert isinstance(self._properties.get('hotkey'), dict)
-        assert isinstance(self._properties.get('modifiers'), list)
-        assert all(bool(libevdev.evbit(m)) for m in self._properties['modifiers'])
+        assert bool(libevdev.evbit(self._properties['hotkey'].get('key')))
+        assert isinstance(self._properties['hotkey'].get('modifiers'), list)
+        assert all(bool(libevdev.evbit(m)) for m in self._properties['hotkey']['modifiers'])
 
 class Source:
     def __init__(
@@ -319,7 +320,7 @@ class Config:
 
     def to_dict(self) -> Dict:
         return {
-            'version': self._version,
+            'config_version': self._version,
             'sources': [s.to_dict() for s in self._sources],
             'source_groups': [s.to_dict() for s in self._source_groups],
             'links': [l.to_dict() for l in self._links],

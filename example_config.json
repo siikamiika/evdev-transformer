@@ -39,6 +39,7 @@
         {
             "name": "Apple Inc. Magic Trackpad 2",
             "type": "evdev_udev",
+            "transforms": [],
             "properties": {
                 "udev": {
                     "ID_VENDOR": "Apple_Inc.",
@@ -49,6 +50,7 @@
         {
             "name": "Logitech Gamepad F310 (Linux Chromebook)",
             "type": "evdev_unix_socket",
+            "transforms": [],
             "properties": {
                 "socket_name": "linux_chromebook.sock",
                 "evdev_id": {
@@ -125,7 +127,8 @@
         },
         {
             "source_group": "Game Input",
-            "destination": "Master"
+            "destination": "Master",
+            "activators": []
         }
     ],
     "destinations": [
@@ -139,11 +142,13 @@
                         "filename": "app_remaps.py"
                     }
                 }
-            ]
+            ],
+            "properties": {}
         },
         {
             "name": "Linux Chromebook",
             "type": "ssh_evdev_unix_socket",
+            "transforms": [],
             "properties": {
                 "socket_name": "master.sock",
                 "host": "examplehost",
