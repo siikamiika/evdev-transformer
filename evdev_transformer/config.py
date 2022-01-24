@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import (
     List,
     Dict
@@ -13,7 +14,7 @@ class Transform:
         self._validate()
 
     @classmethod
-    def from_dict(cls, data: Dict) -> 'Transform':
+    def from_dict(cls, data: Dict) -> Transform:
         cls_ = {
             'key_remap': KeyRemapTransform,
             'script': ScriptTransform,
@@ -55,7 +56,7 @@ class Activator:
         self._validate()
 
     @classmethod
-    def from_dict(cls, data: Dict) -> 'Activator':
+    def from_dict(cls, data: Dict) -> Activator:
         cls_ = {
             'script': ScriptActivator,
             'hotkey': HotkeyActivator,
@@ -110,7 +111,7 @@ class Source:
         return self._name
 
     @classmethod
-    def from_dict(cls, data: Dict) -> 'Source':
+    def from_dict(cls, data: Dict) -> Source:
         cls_ = {
             'evdev_udev': EvdevUdevSource,
             'evdev_unix_socket': EvdevUnixSocketSource,
@@ -175,7 +176,7 @@ class SourceGroup:
         return self._sources
 
     @classmethod
-    def from_dict(cls, data: Dict) -> 'SourceGroup':
+    def from_dict(cls, data: Dict) -> SourceGroup:
         return cls(
             data['name'],
             data['sources'],
@@ -208,7 +209,7 @@ class Destination:
         return self._name
 
     @classmethod
-    def from_dict(cls, data) -> 'Destination':
+    def from_dict(cls, data) -> Destination:
         cls_ = {
             'uinput': UinputDestination,
             'ssh_evdev_unix_socket': SshEvdevUnixSocketDestination,
@@ -270,7 +271,7 @@ class Link:
         return self._destination
 
     @classmethod
-    def from_dict(cls, data) -> 'Link':
+    def from_dict(cls, data) -> Link:
         return cls(
             data['source_group'],
             data['destination'],
@@ -307,7 +308,7 @@ class Config:
         self._validate()
 
     @classmethod
-    def from_dict(cls, data: Dict) -> 'Config':
+    def from_dict(cls, data: Dict) -> Config:
         return cls(
             data['config_version'],
             [Source.from_dict(s) for s in data['sources']],
