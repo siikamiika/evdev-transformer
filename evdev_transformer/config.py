@@ -1,5 +1,8 @@
 class Config:
-    def __init__(self, sources, source_groups, links, destinations):
+    _newest_version = 1
+
+    def __init__(self, version, sources, source_groups, links, destinations):
+        self._version = version
         self._sources = sources
         self._source_groups = source_groups
         self._links = links
@@ -9,6 +12,7 @@ class Config:
     @classmethod
     def from_dict(cls, data):
         return cls(
+            data['config_version'],
             [Source.from_dict(s) for s in data['sources']],
             [SourceGroup.from_dict(s) for s in data['source_groups']],
             [Link.from_dict(l) for l in data['links']],
