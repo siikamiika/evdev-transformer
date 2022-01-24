@@ -26,6 +26,7 @@ with open('example_config.json') as f:
     config = Config.from_dict(json.load(f))
 
 # print(json.dumps(config.to_dict(), indent=4))
+# print(config._current_links)
 # exit()
 
 context = InputContext()

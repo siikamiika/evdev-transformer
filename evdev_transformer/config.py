@@ -302,6 +302,9 @@ class Link:
             assert activator not in activators
             activators.append(activator)
 
+    def __repr__(self):
+        return f'Link(source_group="{self._source_group}" destination="{self._destination}")'
+
 class Config:
     _newest_version = 1
 
