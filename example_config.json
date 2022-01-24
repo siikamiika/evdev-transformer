@@ -4,47 +4,57 @@
         {
             "name": "Logitech K400 Plus",
             "type": "evdev_udev",
-            "udev_properties": {
-                "ID_VENDOR_ID": "046d",
-                "ID_MODEL_ID": "c52b",
-                "ID_INPUT_KEYBOARD": "1",
-                "ID_INPUT_MOUSE": "1"
-            },
             "transforms": [
                 {
                     "type": "key_remap",
-                    "remaps": [
-                        {
-                            "source": "KEY_CAPSLOCK",
-                            "destination": "KEY_ESC"
-                        },
-                        {
-                            "source": "KEY_RIGHTCTRL",
-                            "destination": "KEY_BACKSPACE"
-                        }
-                    ]
+                    "properties": {
+                        "remaps": [
+                            {
+                                "source": "KEY_CAPSLOCK",
+                                "destination": "KEY_ESC"
+                            },
+                            {
+                                "source": "KEY_RIGHTCTRL",
+                                "destination": "KEY_BACKSPACE"
+                            }
+                        ]
+                    }
                 },
                 {
                     "type": "script",
-                    "filename": "hjkl_arrow.py"
+                    "properties": {
+                        "filename": "hjkl_arrow.py"
+                    }
                 }
-            ]
+            ],
+            "properties": {
+                "udev": {
+                    "ID_VENDOR_ID": "046d",
+                    "ID_MODEL_ID": "c52b",
+                    "ID_INPUT_KEYBOARD": "1",
+                    "ID_INPUT_MOUSE": "1"
+                }
+            }
         },
         {
             "name": "Apple Inc. Magic Trackpad 2",
             "type": "evdev_udev",
-            "udev_properties": {
-                "ID_VENDOR": "Apple_Inc.",
-                "ID_INPUT_TOUCHPAD": "1"
+            "properties": {
+                "udev": {
+                    "ID_VENDOR": "Apple_Inc.",
+                    "ID_INPUT_TOUCHPAD": "1"
+                }
             }
         },
         {
             "name": "Logitech Gamepad F310 (Linux Chromebook)",
             "type": "evdev_unix_socket",
-            "socket_name": "linux_chromebook.sock",
-            "evdev_id": {
-                "vendor": 1133,
-                "product": 49693
+            "properties": {
+                "socket_name": "linux_chromebook.sock",
+                "evdev_id": {
+                    "vendor": 1133,
+                    "product": 49693
+                }
             }
         }
     ],
@@ -70,22 +80,28 @@
             "activators": [
                 {
                     "type": "script",
-                    "filename": "unholy_alliance_master_activation_gesture.py"
-                },
-                {
-                    "type": "hotkey",
-                    "hotkey": {
-                        "key": "KEY_F1",
-                        "modifiers": []
+                    "properties": {
+                        "filename": "unholy_alliance_master_activation_gesture.py"
                     }
                 },
                 {
                     "type": "hotkey",
-                    "hotkey": {
-                        "key": "KEY_TAB",
-                        "modifiers": [
-                            "KEY_RIGHTALT"
-                        ]
+                    "properties": {
+                        "hotkey": {
+                            "key": "KEY_F1",
+                            "modifiers": []
+                        }
+                    }
+                },
+                {
+                    "type": "hotkey",
+                    "properties": {
+                        "hotkey": {
+                            "key": "KEY_TAB",
+                            "modifiers": [
+                                "KEY_RIGHTALT"
+                            ]
+                        }
                     }
                 }
             ]
@@ -96,11 +112,13 @@
             "activators": [
                 {
                     "type": "hotkey",
-                    "hotkey": {
-                        "key": "KEY_TAB",
-                        "modifiers": [
-                            "KEY_RIGHTALT"
-                        ]
+                    "properties": {
+                        "hotkey": {
+                            "key": "KEY_TAB",
+                            "modifiers": [
+                                "KEY_RIGHTALT"
+                            ]
+                        }
                     }
                 }
             ]
@@ -117,16 +135,20 @@
             "transforms": [
                 {
                     "type": "script",
-                    "filename": "app_remaps.py"
+                    "properties": {
+                        "filename": "app_remaps.py"
+                    }
                 }
             ]
         },
         {
             "name": "Linux Chromebook",
             "type": "ssh_evdev_unix_socket",
-            "socket_name": "master.sock",
-            "host": "examplehost",
-            "username": "exampleuser"
+            "properties": {
+                "socket_name": "master.sock",
+                "host": "examplehost",
+                "username": "exampleuser"
+            }
         }
     ]
 }
