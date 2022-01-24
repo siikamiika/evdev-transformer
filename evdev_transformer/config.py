@@ -20,15 +20,31 @@ class Transform:
         }[data['type']]
         return cls_(data.get('properties', {}))
 
+    def to_dict(self) -> Dict:
+        return {
+            'type': None,
+            'properties': self._properties,
+        }
+
     def _validate(self):
         assert isinstance(self._properties, dict)
 
 class KeyRemapTransform(Transform):
+    def to_dict(self) -> Dict:
+        d = super().to_dict()
+        d['type'] = 'key_remap'
+        return d
+
     def _validate(self):
         assert isinstance(self._properties.get('remaps'), list)
         assert all(bool(libevdev.evbit(m.get(k))) for k in ['source', 'destination'] for m in self._properties['remaps'])
 
 class ScriptTransform(Transform):
+    def to_dict(self) -> Dict:
+        d = super().to_dict()
+        d['type'] = 'script'
+        return d
+
     def _validate(self):
         super()._validate()
         assert isinstance(self._properties.get('filename'), str)
@@ -46,15 +62,31 @@ class Activator:
         }[data['type']]
         return cls_(data.get('properties', {}))
 
+    def to_dict(self) -> Dict:
+        return {
+            'type': None,
+            'properties': self._properties,
+        }
+
     def _validate(self):
         assert isinstance(self._properties, dict)
 
 class ScriptActivator(Activator):
+    def to_dict(self) -> Dict:
+        d = super().to_dict()
+        d['type'] = 'script'
+        return d
+
     def _validate(self):
         super()._validate()
         assert isinstance(self._properties.get('filename'), str)
 
 class HotkeyActivator(Activator):
+    def to_dict(self) -> Dict:
+        d = super().to_dict()
+        d['type'] = 'hotkey'
+        return d
+
     def _validate(self):
         super()._validate()
         assert isinstance(self._properties.get('hotkey'), dict)
@@ -89,17 +121,35 @@ class Source:
             data.get('properties', {}),
         )
 
+    def to_dict(self) -> Dict:
+        return {
+            'name': self._name,
+            'type': None,
+            'transforms': [t.to_dict() for t in self._transforms],
+            'properties': self._properties,
+        }
+
     def _validate(self):
         assert isinstance(self._name, str)
         assert isinstance(self._properties, dict)
 
 class EvdevUdevSource(Source):
+    def to_dict(self) -> Dict:
+        d = super().to_dict()
+        d['type'] = 'evdev_udev'
+        return d
+
     def _validate(self):
         super()._validate()
         assert isinstance(self._properties.get('udev'), dict)
         assert all(isinstance(v, str) for v in self._properties['udev'].values())
 
 class EvdevUnixSocketSource(Source):
+    def to_dict(self) -> Dict:
+        d = super().to_dict()
+        d['type'] = 'evdev_unix_socket'
+        return d
+
     def _validate(self):
         super()._validate()
         assert isinstance(self._properties.get('socket_name'), str)
@@ -110,7 +160,7 @@ class SourceGroup:
     def __init__(
         self,
         name: str,
-        sources: List[Source],
+        sources: List[str],
     ):
         self._name = name
         self._sources = sources
@@ -121,7 +171,7 @@ class SourceGroup:
         return self._name
 
     @property
-    def sources(self) -> List[Source]:
+    def sources(self) -> List[str]:
         return self._sources
 
     @classmethod
@@ -130,6 +180,12 @@ class SourceGroup:
             data['name'],
             data['sources'],
         )
+
+    def to_dict(self) -> Dict:
+        return {
+            'name': self._name,
+            'sources': self._sources,
+        }
 
     def _validate(self):
         assert isinstance(self._name, str)
@@ -163,14 +219,30 @@ class Destination:
             data.get('properties', {}),
         )
 
+    def to_dict(self) -> Dict:
+        return {
+            'name': self._name,
+            'type': None,
+            'transforms': [t.to_dict() for t in self._transforms],
+            'properties': self._properties,
+        }
+
     def _validate(self):
         assert isinstance(self._name, str)
         assert isinstance(self._properties, dict)
 
 class UinputDestination(Destination):
-    pass
+    def to_dict(self) -> Dict:
+        d = super().to_dict()
+        d['type'] = 'uinput'
+        return d
 
 class SshEvdevUnixSocketDestination(Destination):
+    def to_dict(self):
+        d = super().to_dict()
+        d['type'] = 'ssh_evdev_unix_socket'
+        return d
+
     def _validate(self):
         super()._validate()
         assert isinstance(self._properties.get('socket_name'), str)
@@ -198,12 +270,19 @@ class Link:
         return self._destination
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data) -> 'Link':
         return cls(
             data['source_group'],
             data['destination'],
             [Activator.from_dict(a) for a in data.get('activators', [])],
         )
+
+    def to_dict(self) -> Dict:
+        return {
+            'source_group': self._source_group,
+            'destination': self._destination,
+            'activators': [a.to_dict() for a in self._activators],
+        }
 
     def _validate(self):
         assert isinstance(self._source_group, str)
@@ -236,6 +315,15 @@ class Config:
             [Link.from_dict(l) for l in data['links']],
             [Destination.from_dict(d) for d in data['destinations']],
         )
+
+    def to_dict(self) -> Dict:
+        return {
+            'version': self._version,
+            'sources': [s.to_dict() for s in self._sources],
+            'source_groups': [s.to_dict() for s in self._source_groups],
+            'links': [l.to_dict() for l in self._links],
+            'destinations': [d.to_dict() for d in self._destinations],
+        }
 
     def _validate(self):
         # TODO config version migrations
