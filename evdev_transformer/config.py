@@ -1,9 +1,225 @@
+from typing import (
+    List,
+    Dict
+)
+
 import libevdev
+
+# TODO replace some validation with https://github.com/agronholm/typeguard
+
+class Transform:
+    def __init__(self, properties: Dict):
+        self._properties = properties
+        self._validate()
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> 'Transform':
+        cls_ = {
+            'key_remap': KeyRemapTransform,
+            'script': ScriptTransform,
+        }[data['type']]
+        return cls_(data.get('properties', {}))
+
+    def _validate(self):
+        assert isinstance(self._properties, dict)
+
+class KeyRemapTransform(Transform):
+    def _validate(self):
+        assert isinstance(self._properties.get('remaps'), list)
+        assert all(bool(libevdev.evbit(m.get(k))) for k in ['source', 'destination'] for m in self._properties['remaps'])
+
+class ScriptTransform(Transform):
+    def _validate(self):
+        super()._validate()
+        assert isinstance(self._properties.get('filename'), str)
+
+class Activator:
+    def __init__(self, properties: Dict):
+        self._properties = properties
+        self._validate()
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> 'Activator':
+        cls_ = {
+            'script': ScriptActivator,
+            'hotkey': HotkeyActivator,
+        }[data['type']]
+        return cls_(data.get('properties', {}))
+
+    def _validate(self):
+        assert isinstance(self._properties, dict)
+
+class ScriptActivator(Activator):
+    def _validate(self):
+        super()._validate()
+        assert isinstance(self._properties.get('filename'), str)
+
+class HotkeyActivator(Activator):
+    def _validate(self):
+        super()._validate()
+        assert isinstance(self._properties.get('hotkey'), dict)
+        assert isinstance(self._properties.get('modifiers'), list)
+        assert all(bool(libevdev.evbit(m)) for m in self._properties['modifiers'])
+
+class Source:
+    def __init__(
+        self,
+        name: str,
+        transforms: List[Transform],
+        properties: Dict,
+    ):
+        self._name = name
+        self._transforms = transforms
+        self._properties = properties
+        self._validate()
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> 'Source':
+        cls_ = {
+            'evdev_udev': EvdevUdevSource,
+            'evdev_unix_socket': EvdevUnixSocketSource,
+        }[data['type']]
+        return cls_(
+            data['name'],
+            [Transform.from_dict(t) for t in data.get('transforms', [])],
+            data.get('properties', {}),
+        )
+
+    def _validate(self):
+        assert isinstance(self._name, str)
+        assert isinstance(self._properties, dict)
+
+class EvdevUdevSource(Source):
+    def _validate(self):
+        super()._validate()
+        assert isinstance(self._properties.get('udev'), dict)
+        assert all(isinstance(v, str) for v in self._properties['udev'].values())
+
+class EvdevUnixSocketSource(Source):
+    def _validate(self):
+        super()._validate()
+        assert isinstance(self._properties.get('socket_name'), str)
+        assert isinstance(self._properties.get('evdev_id'), dict)
+        assert all(isinstance(self._properties['evdev_id'][k], int) for k in ['vendor', 'product'])
+
+class SourceGroup:
+    def __init__(
+        self,
+        name: str,
+        sources: List[Source],
+    ):
+        self._name = name
+        self._sources = sources
+        self._validate()
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def sources(self) -> List[Source]:
+        return self._sources
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> 'SourceGroup':
+        return cls(
+            data['name'],
+            data['sources'],
+        )
+
+    def _validate(self):
+        assert isinstance(self._name, str)
+        assert all(isinstance(s, str) for s in self._sources)
+
+class Destination:
+    def __init__(
+        self,
+        name: str,
+        transforms: List[Transform],
+        properties: Dict,
+    ):
+        self._name = name
+        self._transforms = transforms
+        self._properties = properties
+        self._validate()
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @classmethod
+    def from_dict(cls, data) -> 'Destination':
+        cls_ = {
+            'uinput': UinputDestination,
+            'ssh_evdev_unix_socket': SshEvdevUnixSocketDestination,
+        }[data['type']]
+        return cls_(
+            data['name'],
+            [Transform.from_dict(t) for t in data.get('transforms', [])],
+            data.get('properties', {}),
+        )
+
+    def _validate(self):
+        assert isinstance(self._name, str)
+        assert isinstance(self._properties, dict)
+
+class UinputDestination(Destination):
+    pass
+
+class SshEvdevUnixSocketDestination(Destination):
+    def _validate(self):
+        super()._validate()
+        assert isinstance(self._properties.get('socket_name'), str)
+        assert isinstance(self._properties.get('host'), str)
+        assert isinstance(self._properties.get('username'), str)
+
+class Link:
+    def __init__(
+        self,
+        source_group: SourceGroup,
+        destination: Destination,
+        activators: List[Activator],
+    ):
+        self._source_group = source_group
+        self._destination = destination
+        self._activators = activators
+        self._validate()
+
+    @property
+    def source_group(self):
+        return self._source_group
+
+    @property
+    def destination(self):
+        return self._destination
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            data['source_group'],
+            data['destination'],
+            [Activator.from_dict(a) for a in data.get('activators', [])],
+        )
+
+    def _validate(self):
+        assert isinstance(self._source_group, str)
+        assert isinstance(self._destination, str)
 
 class Config:
     _newest_version = 1
 
-    def __init__(self, version, sources, source_groups, links, destinations):
+    def __init__(
+        self,
+        version: int,
+        sources: List[Source],
+        source_groups: List[SourceGroup],
+        links: List[Link],
+        destinations: List[Destination],
+    ):
         self._version = version
         self._sources = sources
         self._source_groups = source_groups
@@ -12,7 +228,7 @@ class Config:
         self._validate()
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data: Dict) -> 'Config':
         return cls(
             data['config_version'],
             [Source.from_dict(s) for s in data['sources']],
@@ -44,186 +260,3 @@ class Config:
             assert len([d for d in self._destinations if d.name == link.destination]) == 1
         # destinations
         assert len(set(d.name for d in self._destinations)) == len(self._destinations)
-
-class Source:
-    def __init__(self, name, transforms, properties):
-        self._name = name
-        self._transforms = transforms
-        self._properties = properties
-        self._validate()
-
-    @property
-    def name(self):
-        return self._name
-
-    @classmethod
-    def from_dict(cls, data):
-        cls_ = {
-            'evdev_udev': EvdevUdevSource,
-            'evdev_unix_socket': EvdevUnixSocketSource,
-        }[data['type']]
-        return cls_(
-            data['name'],
-            [Transform.from_dict(t) for t in data.get('transforms', [])],
-            data.get('properties', {}),
-        )
-
-    def _validate(self):
-        assert isinstance(self._name, str)
-        assert isinstance(self._properties, dict)
-
-class EvdevUdevSource(Source):
-    def _validate(self):
-        super()._validate()
-        assert isinstance(self._properties.get('udev'), dict)
-        assert all(isinstance(v, str) for v in self._properties['udev'].values())
-
-class EvdevUnixSocketSource(Source):
-    def _validate(self):
-        super()._validate()
-        assert isinstance(self._properties.get('socket_name'), str)
-        assert isinstance(self._properties.get('evdev_id'), dict)
-        assert all(isinstance(self._properties['evdev_id'][k], int) for k in ['vendor', 'product'])
-
-class SourceGroup:
-    def __init__(self, name, sources):
-        self._name = name
-        self._sources = sources
-        self._validate()
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def sources(self):
-        return self._sources
-
-    @classmethod
-    def from_dict(cls, data):
-        return cls(
-            data['name'],
-            data['sources'],
-        )
-
-    def _validate(self):
-        assert isinstance(self._name, str)
-        assert all(isinstance(s, str) for s in self._sources)
-
-class Link:
-    def __init__(self, source_group, destination, activators):
-        self._source_group = source_group
-        self._destination = destination
-        self._activators = activators
-        self._validate()
-
-    @property
-    def source_group(self):
-        return self._source_group
-
-    @property
-    def destination(self):
-        return self._destination
-
-    @classmethod
-    def from_dict(cls, data):
-        return cls(
-            data['source_group'],
-            data['destination'],
-            [Activator.from_dict(a) for a in data.get('activators', [])],
-        )
-
-    def _validate(self):
-        assert isinstance(self._source_group, str)
-        assert isinstance(self._destination, str)
-
-class Destination:
-    def __init__(self, name, transforms, properties):
-        self._name = name
-        self._transforms = transforms
-        self._properties = properties
-        self._validate()
-
-    @property
-    def name(self):
-        return self._name
-
-    @classmethod
-    def from_dict(cls, data):
-        cls_ = {
-            'uinput': UinputDestination,
-            'ssh_evdev_unix_socket': SshEvdevUnixSocketDestination,
-        }[data['type']]
-        return cls_(
-            data['name'],
-            [Transform.from_dict(t) for t in data.get('transforms', [])],
-            data.get('properties', {}),
-        )
-
-    def _validate(self):
-        assert isinstance(self._name, str)
-        assert isinstance(self._properties, dict)
-
-class UinputDestination(Destination):
-    pass
-
-class SshEvdevUnixSocketDestination(Destination):
-    def _validate(self):
-        super()._validate()
-        assert isinstance(self._properties.get('socket_name'), str)
-        assert isinstance(self._properties.get('host'), str)
-        assert isinstance(self._properties.get('username'), str)
-
-class Transform:
-    def __init__(self, properties):
-        self._properties = properties
-        self._validate()
-
-    @classmethod
-    def from_dict(cls, data):
-        cls_ = {
-            'key_remap': KeyRemapTransform,
-            'script': ScriptTransform,
-        }[data['type']]
-        return cls_(data.get('properties', {}))
-
-    def _validate(self):
-        assert isinstance(self._properties, dict)
-
-class KeyRemapTransform(Transform):
-    def _validate(self):
-        assert isinstance(self._properties.get('remaps'), list)
-        assert all(bool(libevdev.evbit(m.get(k))) for k in ['source', 'destination'] for m in self._properties['remaps'])
-
-class ScriptTransform(Transform):
-    def _validate(self):
-        super()._validate()
-        assert isinstance(self._properties.get('filename'), str)
-
-class Activator:
-    def __init__(self, properties):
-        self._properties = properties
-        self._validate()
-
-    @classmethod
-    def from_dict(cls, data):
-        cls_ = {
-            'script': ScriptActivator,
-            'hotkey': HotkeyActivator,
-        }[data['type']]
-        return cls_(data.get('properties', {}))
-
-    def _validate(self):
-        assert isinstance(self._properties, dict)
-
-class ScriptActivator(Activator):
-    def _validate(self):
-        super()._validate()
-        assert isinstance(self._properties.get('filename'), str)
-
-class HotkeyActivator(Activator):
-    def _validate(self):
-        super()._validate()
-        assert isinstance(self._properties.get('hotkey'), dict)
-        assert isinstance(self._properties.get('modifiers'), list)
-        assert all(bool(libevdev.evbit(m)) for m in self._properties['modifiers'])
