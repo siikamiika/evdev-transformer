@@ -382,7 +382,7 @@ class Config:
         else:
             new_idx = 0
         # TODO generate event --> event listener for config state
-        self._links[self._links.index(current_link)] = matches[new_idx]
+        self._current_links[self._current_links.index(current_link)] = matches[new_idx]
 
     @classmethod
     def from_dict(cls, data: Dict) -> Config:

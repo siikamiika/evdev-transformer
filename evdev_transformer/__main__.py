@@ -27,6 +27,8 @@ with open('example_config.json') as f:
 
 # print(json.dumps(config.to_dict(), indent=4))
 # print(config._current_links)
+# config.activate_next_link('Unholy Alliance')
+# print(config._current_links)
 # exit()
 
 context = InputContext()
