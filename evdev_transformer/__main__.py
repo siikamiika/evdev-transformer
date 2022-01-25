@@ -9,7 +9,7 @@ from .serde import (
     serialize_events,
     deserialize_events
 )
-from .config import Config
+from .config import ConfigManager
 
 logitech_k400 = {
     "ID_VENDOR_ID": "046d",
@@ -22,11 +22,10 @@ apple_magic_trackpad = {
     "ID_INPUT_TOUCHPAD": "1",
 }
 
-with open('example_config.json') as f:
-    config = Config.from_dict(json.load(f))
+config_manager = ConfigManager('example_config.json')
 
-# for event in config.events():
-#     print(event)
+for event in config_manager.events():
+    print(event)
 
 # print(json.dumps(config.to_dict(), indent=4))
 # print(config._current_links)

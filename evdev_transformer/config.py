@@ -334,11 +334,6 @@ class Config:
         self._destinations = destinations
         self._links = links
         self._validate()
-        # state
-        # TODO store elsewhere?
-        self._event_queue = queue.Queue()
-        self._current_links: List[Link] = []
-        self._init_state()
 
     @property
     def version(self) -> int:
@@ -359,55 +354,6 @@ class Config:
     @property
     def links(self) -> List[Link]:
         return self._links
-
-    def events(self) -> Iterable[Dict]: # TODO event class
-        yield from iter(self._event_queue.get, None)
-
-    def _init_state(self):
-        # TODO diff (add, remove) when reloading config
-        for source in self._sources:
-            self._event_queue.put({'type': 'add', 'object': source})
-        for source_group in self._source_groups:
-            self._event_queue.put({'type': 'add', 'object': source_group})
-        for destination in self._destinations:
-            self._event_queue.put({'type': 'add', 'object': destination})
-        seen_source_groups = set()
-        for link in self._links:
-            if link.source_group in seen_source_groups:
-                continue
-            seen_source_groups.add(link.source_group)
-            self._current_links.append(link)
-            self._event_queue.put({'type': 'add', 'object': link})
-
-    def activate_next_link(
-        self,
-        source_group: str,
-        activator: Optional[Activator] = None,
-    ):
-        current_link = None
-        for link in self._current_links:
-            if link.source_group == source_group:
-                current_link = link
-                break
-        else:
-            raise Exception('No active link for source group')
-        matches = [
-            l for l in self._links
-            if l.source_group == source_group and (
-                activator is None
-                or activator in l.activators
-            )
-        ]
-        if not matches:
-            raise Exception('No matches')
-        if current_link in matches:
-            new_idx = (matches.index(current_link) + 1) % len(matches)
-        else:
-            new_idx = 0
-        new_link = matches[new_idx]
-        self._event_queue.put({'type': 'remove', 'object': current_link})
-        self._current_links[self._current_links.index(current_link)] = new_link
-        self._event_queue.put({'type': 'add', 'object': new_link})
 
     @classmethod
     def from_dict(cls, data: Dict) -> Config:
@@ -451,3 +397,70 @@ class Config:
             assert len([d for d in self._destinations if d.name == link.destination]) == 1
         # destinations
         assert len(set(d.name for d in self._destinations)) == len(self._destinations)
+
+class ConfigManager:
+    def __init__(self, config_path):
+        self._config_path = config_path
+        self._event_queue = queue.Queue()
+        self._current_links: List[Link] = []
+        self._config = self._load_config()
+        self._init_state()
+
+    def events(self) -> Iterable[Dict]: # TODO event class
+        yield from iter(self._event_queue.get, None)
+
+    def activate_next_link(
+        self,
+        source_group: str,
+        activator: Optional[Activator] = None,
+    ):
+        current_link = None
+        for link in self._current_links:
+            if link.source_group == source_group:
+                current_link = link
+                break
+        else:
+            raise Exception('No active link for source group')
+        matches = [
+            l for l in self._config.links
+            if l.source_group == source_group and (
+                activator is None
+                or activator in l.activators
+            )
+        ]
+        if not matches:
+            raise Exception('No matches')
+        if current_link in matches:
+            new_idx = (matches.index(current_link) + 1) % len(matches)
+        else:
+            new_idx = 0
+        new_link = matches[new_idx]
+        self._event_queue.put({'type': 'remove', 'object': current_link})
+        self._current_links[self._current_links.index(current_link)] = new_link
+        self._event_queue.put({'type': 'add', 'object': new_link})
+
+    def _load_config(self) -> Config:
+        with open(self._config_path) as f:
+            return Config.from_dict(json.load(f))
+
+    def _reload_config(self):
+        # TODO diff (add, remove) when reloading config
+        # old_config = self._config
+        # with open(self._config_path) as f:
+        #     new_config = Config.from_dict(json.load(f))
+        raise NotImplementedError('Config reload not implemented')
+
+    def _init_state(self):
+        for source in self._config.sources:
+            self._event_queue.put({'type': 'add', 'object': source})
+        for source_group in self._config.source_groups:
+            self._event_queue.put({'type': 'add', 'object': source_group})
+        for destination in self._config.destinations:
+            self._event_queue.put({'type': 'add', 'object': destination})
+        seen_source_groups = set()
+        for link in self._config.links:
+            if link.source_group in seen_source_groups:
+                continue
+            seen_source_groups.add(link.source_group)
+            self._current_links.append(link)
+            self._event_queue.put({'type': 'add', 'object': link})
