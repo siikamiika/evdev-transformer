@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import (
     List,
+    Tuple,
     Dict,
     Optional,
     Iterable
@@ -102,6 +103,10 @@ class EvdevUdevSource(Source):
         d = super().to_dict()
         d['type'] = 'evdev_udev'
         return d
+
+    @property
+    def udev_properties(self):
+        return self._properties['udev']
 
     def _validate(self):
         super()._validate()
@@ -408,6 +413,30 @@ class ConfigManager:
 
     def events(self) -> Iterable[Dict]: # TODO event class
         yield from iter(self._event_queue.get, None)
+
+    def get_matching_linked_devices(self, link: Link, devices: List[Tuple]) -> List:
+        matches = []
+        # TODO DB
+        source_group = [s for s in self._config.source_groups if s.name == link.source_group][0]
+        sources = [s for s in self._config.sources if s.name in source_group.sources]
+        # TODO store rule in device class
+        for device, rule in devices:
+            for source in self._config.sources:
+                if source.name not in source_group.sources:
+                    continue
+                if isinstance(source, EvdevUdevSource):
+                    if rule == source.udev_properties:
+                        matches.append(device)
+                else:
+                    # TODO other types of devices (use wrapper class or inheritance)
+                    pass
+        return matches
+
+    def get_matching_destination(self, link: Link) -> Optional[Destination]:
+        for destination in self._config.destinations:
+            if destination.name == link.destination:
+                return destination
+        return None
 
     def activate_next_link(
         self,
