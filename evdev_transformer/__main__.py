@@ -74,6 +74,7 @@ for event in config_manager.events():
             destination = config_manager.get_matching_destination(obj)
             if isinstance(destination, UinputDestination):
                 for matching_device in matching_devices:
+                    # TODO fails with touchpad
                     threading.Thread(target=forward_to_uinput, args=(matching_device, [])).start()
     elif event['type'] == 'remove':
         if isinstance(obj, Link):
