@@ -25,6 +25,9 @@ apple_magic_trackpad = {
 with open('example_config.json') as f:
     config = Config.from_dict(json.load(f))
 
+# for event in config.events():
+#     print(event)
+
 # print(json.dumps(config.to_dict(), indent=4))
 # print(config._current_links)
 # config.activate_next_link('Unholy Alliance')

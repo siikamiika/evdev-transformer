@@ -3,7 +3,10 @@ from typing import (
     List,
     Dict,
     Optional,
+    Iterable
 )
+import queue
+import json
 
 import libevdev
 
@@ -139,6 +142,9 @@ class Source:
         assert isinstance(self._name, str)
         assert isinstance(self._properties, dict)
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}(name="{self._name}")'
+
 class EvdevUdevSource(Source):
     def to_dict(self) -> Dict:
         d = super().to_dict()
@@ -197,6 +203,9 @@ class SourceGroup:
         assert isinstance(self._name, str)
         assert all(isinstance(s, str) for s in self._sources)
 
+    def __repr__(self):
+        return f'SourceGroup(name="{self._name}", sources={json.dumps(self._sources)})'
+
 class Destination:
     def __init__(
         self,
@@ -236,6 +245,9 @@ class Destination:
     def _validate(self):
         assert isinstance(self._name, str)
         assert isinstance(self._properties, dict)
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(name="{self._name}")'
 
 class UinputDestination(Destination):
     def to_dict(self) -> Dict:
@@ -324,6 +336,7 @@ class Config:
         self._validate()
         # state
         # TODO store elsewhere?
+        self._event_queue = queue.Queue()
         self._current_links: List[Link] = []
         self._init_state()
 
@@ -347,14 +360,24 @@ class Config:
     def destinations(self) -> List[Destination]:
         return self._destinations
 
+    def events(self) -> Iterable[Dict]: # TODO event class
+        yield from iter(self._event_queue.get, None)
+
     def _init_state(self):
+        # TODO diff (add, remove) when reloading config
+        for source in self._sources:
+            self._event_queue.put({'type': 'add', 'object': source})
+        for source_group in self._source_groups:
+            self._event_queue.put({'type': 'add', 'object': source_group})
+        for destination in self._destinations:
+            self._event_queue.put({'type': 'add', 'object': destination})
         seen_source_groups = set()
         for link in self._links:
             if link.source_group in seen_source_groups:
                 continue
             seen_source_groups.add(link.source_group)
-            # TODO generate event --> event listener for config state
             self._current_links.append(link)
+            self._event_queue.put({'type': 'add', 'object': link})
 
     def activate_next_link(
         self,
@@ -381,8 +404,10 @@ class Config:
             new_idx = (matches.index(current_link) + 1) % len(matches)
         else:
             new_idx = 0
-        # TODO generate event --> event listener for config state
-        self._current_links[self._current_links.index(current_link)] = matches[new_idx]
+        new_link = matches[new_idx]
+        self._event_queue.put({'type': 'remove', 'object': current_link})
+        self._current_links[self._current_links.index(current_link)] = new_link
+        self._event_queue.put({'type': 'add', 'object': new_link})
 
     @classmethod
     def from_dict(cls, data: Dict) -> Config:
