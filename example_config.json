@@ -75,6 +75,31 @@
             ]
         }
     ],
+    "destinations": [
+        {
+            "name": "Master",
+            "type": "uinput",
+            "transforms": [
+                {
+                    "type": "script",
+                    "properties": {
+                        "filename": "app_remaps.py"
+                    }
+                }
+            ],
+            "properties": {}
+        },
+        {
+            "name": "Linux Chromebook",
+            "type": "ssh_evdev_unix_socket",
+            "transforms": [],
+            "properties": {
+                "socket_name": "master.sock",
+                "host": "examplehost",
+                "username": "exampleuser"
+            }
+        }
+    ],
     "links": [
         {
             "source_group": "Unholy Alliance",
@@ -129,31 +154,6 @@
             "source_group": "Game Input",
             "destination": "Master",
             "activators": []
-        }
-    ],
-    "destinations": [
-        {
-            "name": "Master",
-            "type": "uinput",
-            "transforms": [
-                {
-                    "type": "script",
-                    "properties": {
-                        "filename": "app_remaps.py"
-                    }
-                }
-            ],
-            "properties": {}
-        },
-        {
-            "name": "Linux Chromebook",
-            "type": "ssh_evdev_unix_socket",
-            "transforms": [],
-            "properties": {
-                "socket_name": "master.sock",
-                "host": "examplehost",
-                "username": "exampleuser"
-            }
         }
     ]
 }

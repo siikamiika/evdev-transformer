@@ -54,54 +54,6 @@ class ScriptTransform(Transform):
         super()._validate()
         assert isinstance(self._properties.get('filename'), str)
 
-class Activator:
-    def __init__(self, properties: Dict):
-        self._properties = properties
-        self._validate()
-
-    def __eq__(self, other):
-        self.to_dict() == other.to_dict()
-
-    @classmethod
-    def from_dict(cls, data: Dict) -> Activator:
-        cls_ = {
-            'script': ScriptActivator,
-            'hotkey': HotkeyActivator,
-        }[data['type']]
-        return cls_(data.get('properties', {}))
-
-    def to_dict(self) -> Dict:
-        return {
-            'type': None,
-            'properties': self._properties,
-        }
-
-    def _validate(self):
-        assert isinstance(self._properties, dict)
-
-class ScriptActivator(Activator):
-    def to_dict(self) -> Dict:
-        d = super().to_dict()
-        d['type'] = 'script'
-        return d
-
-    def _validate(self):
-        super()._validate()
-        assert isinstance(self._properties.get('filename'), str)
-
-class HotkeyActivator(Activator):
-    def to_dict(self) -> Dict:
-        d = super().to_dict()
-        d['type'] = 'hotkey'
-        return d
-
-    def _validate(self):
-        super()._validate()
-        assert isinstance(self._properties.get('hotkey'), dict)
-        assert bool(libevdev.evbit(self._properties['hotkey'].get('key')))
-        assert isinstance(self._properties['hotkey'].get('modifiers'), list)
-        assert all(bool(libevdev.evbit(m)) for m in self._properties['hotkey']['modifiers'])
-
 class Source:
     def __init__(
         self,
@@ -267,6 +219,54 @@ class SshEvdevUnixSocketDestination(Destination):
         assert isinstance(self._properties.get('host'), str)
         assert isinstance(self._properties.get('username'), str)
 
+class Activator:
+    def __init__(self, properties: Dict):
+        self._properties = properties
+        self._validate()
+
+    def __eq__(self, other):
+        self.to_dict() == other.to_dict()
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> Activator:
+        cls_ = {
+            'script': ScriptActivator,
+            'hotkey': HotkeyActivator,
+        }[data['type']]
+        return cls_(data.get('properties', {}))
+
+    def to_dict(self) -> Dict:
+        return {
+            'type': None,
+            'properties': self._properties,
+        }
+
+    def _validate(self):
+        assert isinstance(self._properties, dict)
+
+class ScriptActivator(Activator):
+    def to_dict(self) -> Dict:
+        d = super().to_dict()
+        d['type'] = 'script'
+        return d
+
+    def _validate(self):
+        super()._validate()
+        assert isinstance(self._properties.get('filename'), str)
+
+class HotkeyActivator(Activator):
+    def to_dict(self) -> Dict:
+        d = super().to_dict()
+        d['type'] = 'hotkey'
+        return d
+
+    def _validate(self):
+        super()._validate()
+        assert isinstance(self._properties.get('hotkey'), dict)
+        assert bool(libevdev.evbit(self._properties['hotkey'].get('key')))
+        assert isinstance(self._properties['hotkey'].get('modifiers'), list)
+        assert all(bool(libevdev.evbit(m)) for m in self._properties['hotkey']['modifiers'])
+
 class Link:
     def __init__(
         self,
@@ -325,14 +325,14 @@ class Config:
         version: int,
         sources: List[Source],
         source_groups: List[SourceGroup],
-        links: List[Link],
         destinations: List[Destination],
+        links: List[Link],
     ):
         self._version = version
         self._sources = sources
         self._source_groups = source_groups
-        self._links = links
         self._destinations = destinations
+        self._links = links
         self._validate()
         # state
         # TODO store elsewhere?
@@ -353,12 +353,12 @@ class Config:
         return self._source_groups
 
     @property
-    def links(self) -> List[Link]:
-        return self._links
-
-    @property
     def destinations(self) -> List[Destination]:
         return self._destinations
+
+    @property
+    def links(self) -> List[Link]:
+        return self._links
 
     def events(self) -> Iterable[Dict]: # TODO event class
         yield from iter(self._event_queue.get, None)
@@ -415,8 +415,8 @@ class Config:
             data['config_version'],
             [Source.from_dict(s) for s in data['sources']],
             [SourceGroup.from_dict(s) for s in data['source_groups']],
-            [Link.from_dict(l) for l in data['links']],
             [Destination.from_dict(d) for d in data['destinations']],
+            [Link.from_dict(l) for l in data['links']],
         )
 
     def to_dict(self) -> Dict:
@@ -424,8 +424,8 @@ class Config:
             'config_version': self._version,
             'sources': [s.to_dict() for s in self._sources],
             'source_groups': [s.to_dict() for s in self._source_groups],
-            'links': [l.to_dict() for l in self._links],
             'destinations': [d.to_dict() for d in self._destinations],
+            'links': [l.to_dict() for l in self._links],
         }
 
     def _validate(self):
