@@ -21,7 +21,7 @@ from .config import (
     Link,
 )
 from .system_events import InputDeviceMonitor
-from .context import EvdevWrapper
+from .device import EvdevWrapper
 
 config_manager = ConfigManager('example_config.json')
 device_monitor = InputDeviceMonitor()
