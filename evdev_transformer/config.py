@@ -411,32 +411,17 @@ class ConfigManager:
         self._config = self._load_config()
         self._init_state()
 
+    def get_current_links(self) -> Iterable[Tuple[Link, List[Source], Destination]]:
+        for link in self._current_links:
+            source_group = [s for s in self._config.source_groups if s.name == link.source_group][0]
+            yield (
+                link,
+                [s for s in self._config.sources if s.name in source_group.sources],
+                [d for d in self._config.destinations if d.name == link.destination][0],
+            )
+
     def events(self) -> Iterable[Dict]: # TODO event class
         yield from iter(self._event_queue.get, None)
-
-    def get_matching_linked_devices(self, link: Link, devices: List[Tuple]) -> List:
-        matches = []
-        # TODO DB
-        source_group = [s for s in self._config.source_groups if s.name == link.source_group][0]
-        sources = [s for s in self._config.sources if s.name in source_group.sources]
-        # TODO store rule in device class
-        for device, rule in devices:
-            for source in self._config.sources:
-                if source.name not in source_group.sources:
-                    continue
-                if isinstance(source, EvdevUdevSource):
-                    if rule == source.udev_properties:
-                        matches.append(device)
-                else:
-                    # TODO other types of devices (use wrapper class or inheritance)
-                    pass
-        return matches
-
-    def get_matching_destination(self, link: Link) -> Optional[Destination]:
-        for destination in self._config.destinations:
-            if destination.name == link.destination:
-                return destination
-        return None
 
     def activate_next_link(
         self,

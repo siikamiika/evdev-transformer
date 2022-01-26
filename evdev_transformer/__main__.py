@@ -26,6 +26,20 @@ from .device import EvdevWrapper
 config_manager = ConfigManager('example_config.json')
 device_monitor = InputDeviceMonitor()
 source_devices = []
+activated_links = {}
+
+def update_links():
+    for link, sources, destination in config_manager.get_current_links():
+        # TODO other source types
+        for source in [s for s in sources if isinstance(s, EvdevUdevSource)]:
+            if source.name not in activated_links:
+                matching_devices = [d for d, r in source_devices if r == source.udev_properties]
+                if matching_devices:
+                    source_device = matching_devices[0]
+                    activated_links[source.name] = destination.name
+                    # TODO transforms
+                    # TODO other destination types
+                    threading.Thread(target=forward_to_uinput, args=(source_device, [])).start()
 
 def create_evdev_device(udev_device):
     devname = udev_device.get('DEVNAME')
@@ -45,6 +59,7 @@ def monitor_devices():
         print(action, udev_device, rule)
         if action == 'add':
             source_devices.append((create_evdev_device(udev_device), rule))
+            update_links()
         elif action == 'remove':
             for source_device, rule2 in source_devices:
                 if rule == rule2:
@@ -52,57 +67,26 @@ def monitor_devices():
                     source_devices.remove((source_device, rule2))
                     break
 
+def monitor_config():
+    for event in config_manager.events():
+        print(event)
+        obj = event['object']
+        if event['type'] == 'add':
+            if isinstance(obj, Source):
+                if isinstance(obj, EvdevUdevSource):
+                    print('add monitored attributes', obj.udev_properties)
+                    device_monitor.add_monitored_attrs(obj.udev_properties)
+                elif isinstance(obj, EvdevUnixSocketSource):
+                    print('TODO', obj)
+            elif isinstance(obj, SourceGroup):
+                pass
+            elif isinstance(obj, Destination):
+                pass
+            elif isinstance(obj, Link):
+                update_links()
+        elif event['type'] == 'remove':
+            if isinstance(obj, Link):
+                pass
+
 threading.Thread(target=monitor_devices).start()
-
-for event in config_manager.events():
-    print(event)
-    obj = event['object']
-    if event['type'] == 'add':
-        if isinstance(obj, Source):
-            if isinstance(obj, EvdevUdevSource):
-                print('add monitored attributes', obj.udev_properties)
-                device_monitor.add_monitored_attrs(obj.udev_properties)
-            elif isinstance(obj, EvdevUnixSocketSource):
-                print('TODO', obj)
-        elif isinstance(obj, SourceGroup):
-            pass
-        elif isinstance(obj, Destination):
-            pass
-        elif isinstance(obj, Link):
-            matching_devices = config_manager.get_matching_linked_devices(obj, source_devices)
-            print('matching_devices', obj, source_devices, matching_devices)
-            destination = config_manager.get_matching_destination(obj)
-            if isinstance(destination, UinputDestination):
-                for matching_device in matching_devices:
-                    # TODO fails with touchpad
-                    threading.Thread(target=forward_to_uinput, args=(matching_device, [])).start()
-    elif event['type'] == 'remove':
-        if isinstance(obj, Link):
-            pass
-
-# print(json.dumps(config.to_dict(), indent=4))
-# print(config._current_links)
-# config.activate_next_link('Unholy Alliance')
-# print(config._current_links)
-# exit()
-
-# context = InputContext()
-# context.add_monitored_attrs(apple_magic_trackpad)
-
-# def handle_device(device, rule):
-#     devname = device.get_fd_name()
-#     uinput_device = device.create_uinput_device()
-#     for events in device.events():
-#         print(deserialize_events(serialize_events(events)))
-#         uinput_device.send_events(events)
-#         # if random.randint(0, 100) == 100:
-#         #     context.remove_monitored_attrs(logitech_k400)
-#         # elif random.randint(0, 100) == 100:
-#         #     context.add_monitored_attrs(logitech_k400)
-
-# for action, device, rule in context.events():
-#     print(action, device, rule)
-#     if action == 'add':
-#         threading.Thread(target=handle_device, args=(device, rule)).start()
-#     elif action == 'remove':
-#         pass
+threading.Thread(target=monitor_config).start()
