@@ -4,7 +4,6 @@ import json
 
 import libevdev
 
-from .context import InputContext
 from .serde import (
     serialize_events,
     deserialize_events
