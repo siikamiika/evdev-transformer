@@ -6,3 +6,4 @@
 - hid emu
 - libinput gestures
 - handle multiple devices with same vendor/product
+- forward source to multiple destinations
