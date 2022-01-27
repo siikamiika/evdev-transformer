@@ -40,7 +40,7 @@ class EvdevWrapper:
         while True:
             try:
                 for event in self._device.events():
-                    if self._event_loop_stopped[loop_id]:
+                    if self._event_loop_stopped[loop_id] and not self._pressed_keys:
                         break
                     yield from self._handle_event(event)
             except libevdev.device.EventsDroppedException:
