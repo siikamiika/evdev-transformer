@@ -43,7 +43,7 @@ class Hub:
                 if self._activated_links.get(source.name) not in [None, destination.name]:
                     del self._activated_links[source.name]
                     matching_devices[0].release()
-                if source.name not in self._activated_links and matching_devices:
+                if source.name not in self._activated_links:
                     self._activated_links[source.name] = destination.name
                     # TODO transforms
                     # TODO other destination types
