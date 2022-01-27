@@ -4,7 +4,6 @@ class EvdevWrapper:
     _uinput_cache = {}
     def __init__(self, libevdev_device):
         self._device = libevdev_device
-        self._device.grab()
         self._pressed_keys = set()
         self._stopped = False
         self._buffer = []
@@ -35,6 +34,7 @@ class EvdevWrapper:
         self._stopped = True
 
     def events(self):
+        self._device.grab()
         while True:
             try:
                 for event in self._device.events():
