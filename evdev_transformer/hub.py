@@ -35,14 +35,19 @@ class Hub:
         for link, sources, destination in self._config_manager.get_current_links():
             # TODO other source types
             for source in [s for s in sources if isinstance(s, EvdevUdevSource)]:
-                if source.name not in self._activated_links:
-                    matching_devices = [d for d, r in self._source_devices if r == source.udev_properties]
-                    if matching_devices:
-                        source_device = matching_devices[0]
-                        self._activated_links[source.name] = destination.name
-                        # TODO transforms
-                        # TODO other destination types
-                        threading.Thread(target=self._forward_to_uinput, args=(source_device, [])).start()
+                matching_devices = [d for d, r in self._source_devices if r == source.udev_properties]
+                if not matching_devices:
+                    if source.name in self._activated_links:
+                        del self._activated_links[source.name]
+                    continue
+                if self._activated_links.get(source.name) not in [None, destination.name]:
+                    del self._activated_links[source.name]
+                    matching_devices[0].release()
+                if source.name not in self._activated_links and matching_devices:
+                    self._activated_links[source.name] = destination.name
+                    # TODO transforms
+                    # TODO other destination types
+                    threading.Thread(target=self._forward_to_uinput, args=(matching_devices[0], [])).start()
 
     def _create_evdev_device(self, udev_device):
         devname = udev_device.get('DEVNAME')
@@ -66,8 +71,8 @@ class Hub:
             elif action == 'remove':
                 for source_device, rule2 in self._source_devices:
                     if rule == rule2:
-                        # TODO release device (relevant when config reload is supported)
                         self._source_devices.remove((source_device, rule2))
+                        self._update_links()
                         break
 
     def _monitor_config(self):
@@ -89,4 +94,4 @@ class Hub:
                     self._update_links()
             elif event['type'] == 'remove':
                 if isinstance(obj, Link):
-                    pass
+                    self._update_links()

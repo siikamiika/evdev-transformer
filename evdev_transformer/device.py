@@ -5,7 +5,7 @@ class EvdevWrapper:
     def __init__(self, libevdev_device):
         self._device = libevdev_device
         self._pressed_keys = set()
-        self._stopped = False
+        self._event_loop_stopped = []
         self._buffer = []
 
     def get_fd_name(self):
@@ -31,14 +31,16 @@ class EvdevWrapper:
 
     def release(self):
         self._device.ungrab()
-        self._stopped = True
+        self._event_loop_stopped = [True for _ in self._event_loop_stopped]
 
     def events(self):
         self._device.grab()
+        loop_id = len(self._event_loop_stopped)
+        self._event_loop_stopped.append(False)
         while True:
             try:
                 for event in self._device.events():
-                    if self._stopped:
+                    if self._event_loop_stopped[loop_id]:
                         break
                     yield from self._handle_event(event)
             except libevdev.device.EventsDroppedException:
