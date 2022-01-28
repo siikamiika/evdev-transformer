@@ -32,9 +32,11 @@ class Hub:
         threading.Thread(target=self._monitor_config).start()
 
     def _update_links(self):
+        seen_sources = set()
         for link, sources, destination in self._config_manager.get_current_links():
             # TODO other source types
             for source in [s for s in sources if isinstance(s, EvdevUdevSource)]:
+                seen_sources.add(source.name)
                 matching_devices = [d for d, r in self._source_devices if r == source.udev_properties]
                 if not matching_devices:
                     if source.name in self._activated_links:
@@ -48,6 +50,9 @@ class Hub:
                     # TODO transforms
                     # TODO other destination types
                     threading.Thread(target=self._forward_to_uinput, args=(matching_devices[0], [])).start()
+        for key in self._activated_links:
+            if key not in seen_sources:
+                del self._activated_links[key]
 
     def _create_evdev_device(self, udev_device):
         devname = udev_device.get('DEVNAME')
