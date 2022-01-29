@@ -55,7 +55,6 @@ class SourceDevice:
     def release(self):
         if self._event_loop_stopped:
             self._event_loop_stopped[-1] = True
-        self._release_device()
 
     def events(self) -> Iterable[List[libevdev.InputEvent]]:
         with self._lock:
@@ -64,10 +63,11 @@ class SourceDevice:
             self._event_loop_stopped.append(False)
             for events in self._events():
                 print(self._event_loop_stopped, loop_id, self._pressed_keys)
+                yield events
                 # TODO forcefully release the pressed keys
                 if self._event_loop_stopped[loop_id] and not self._pressed_keys:
+                    self._release_device()
                     break
-                yield events
 
     def _release_device(self):
         raise NotImplementedError('Override me')
