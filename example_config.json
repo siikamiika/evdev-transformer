@@ -91,12 +91,10 @@
         },
         {
             "name": "Linux Chromebook",
-            "type": "ssh_evdev_unix_socket",
+            "type": "subprocess",
             "transforms": [],
             "properties": {
-                "socket_name": "master.sock",
-                "host": "examplehost",
-                "username": "exampleuser"
+                "executable": "cat"
             }
         }
     ],

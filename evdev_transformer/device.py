@@ -4,7 +4,9 @@ from typing import (
     List,
     Set,
     Iterable,
+    Optional,
 )
+import threading
 
 import libevdev
 
@@ -15,13 +17,14 @@ class SourceDevice:
         self._pressed_keys: Set[int] = set()
         self._event_loop_stopped: List[bool] = []
         self._buffer: List[libevdev.InputEvent] = []
+        self._lock = threading.Lock()
 
     @property
     def name(self) -> str:
         raise NotImplementedError('Override me')
 
     @property
-    def id(self):
+    def id(self) -> Dict[str, int]:
         raise NotImplementedError('Override me')
 
     @property
@@ -54,13 +57,16 @@ class SourceDevice:
         self._release_device()
 
     def events(self) -> Iterable[List[libevdev.InputEvent]]:
-        self._grab_device()
-        loop_id = len(self._event_loop_stopped)
-        self._event_loop_stopped.append(False)
-        for events in self._events():
-            if self._event_loop_stopped[loop_id] and not self._pressed_keys:
-                break
-            yield events
+        with self._lock:
+            self._grab_device()
+            loop_id = len(self._event_loop_stopped)
+            self._event_loop_stopped.append(False)
+            for events in self._events():
+                print(self._event_loop_stopped, loop_id, self._pressed_keys)
+                # TODO forcefully release the pressed keys
+                if self._event_loop_stopped[loop_id] and not self._pressed_keys:
+                    break
+                yield events
 
     def _release_device(self):
         raise NotImplementedError('Override me')
@@ -145,6 +151,8 @@ class EvdevSourceDevice(SourceDevice):
             except libevdev.device.EventsDroppedException:
                 for event in self._device.sync():
                     yield from self._handle_event(event)
+                continue
+            break
 
 class SubprocessSourceDevice(SourceDevice):
     pass
@@ -157,19 +165,21 @@ class DestinationDevice:
         evbits: Dict[libevdev.EventType, List[libevdev.EventCode]],
         absinfo: Dict[libevdev.EventCode, libevdev.InputAbsInfo],
         rep_value: Dict[libevdev.EventCode, int],
+        properties: Optional[Dict],
     ):
         self._name = name
         self._id = id
         self._evbits = evbits
         self._absinfo = absinfo
         self._rep_value = rep_value
+        self._properties = properties
         self._device = self._create_device()
 
-    # TODO cache
     @classmethod
-    def from_source_device(
+    def create(
         cls,
         source_device: SourceDevice,
+        properties: Dict = None,
     ) -> DestinationDevice:
         return cls(
             source_device.name + ' (Virtual)',
@@ -177,6 +187,7 @@ class DestinationDevice:
             source_device.evbits,
             source_device.absinfo,
             source_device.rep_value,
+            properties,
         )
 
     def send_events(self, events: List[libevdev.InputEvent]):
@@ -210,7 +221,12 @@ class UinputDestinationDevice(DestinationDevice):
         return device.create_uinput_device()
 
 class SubprocessDestinationDevice(DestinationDevice):
-    pass
+    def send_events(self, events: List[libevdev.InputEvent]):
+        # TODO
+        print('wat')
+
+    def _create_device(self) -> libevdev.device.UinputDevice:
+        print('TODO SubprocessDestinationDevice._create_device')
 
 class HidGadgetDestinationDevice(DestinationDevice):
     # TODO

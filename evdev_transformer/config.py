@@ -183,7 +183,7 @@ class Destination:
     def from_dict(cls, data) -> Destination:
         cls_ = {
             'uinput': UinputDestination,
-            'ssh_evdev_unix_socket': SshEvdevUnixSocketDestination,
+            'subprocess': SubprocessDestination,
         }[data['type']]
         return cls_(
             data['name'],
@@ -212,17 +212,19 @@ class UinputDestination(Destination):
         d['type'] = 'uinput'
         return d
 
-class SshEvdevUnixSocketDestination(Destination):
+class SubprocessDestination(Destination):
     def to_dict(self):
         d = super().to_dict()
-        d['type'] = 'ssh_evdev_unix_socket'
+        d['type'] = 'subprocess'
         return d
+
+    @property
+    def executable(self) -> str:
+        return self._properties['executable']
 
     def _validate(self):
         super()._validate()
-        assert isinstance(self._properties.get('socket_name'), str)
-        assert isinstance(self._properties.get('host'), str)
-        assert isinstance(self._properties.get('username'), str)
+        assert isinstance(self._properties.get('executable'), str)
 
 class Activator:
     def __init__(self, properties: Dict):
@@ -410,6 +412,10 @@ class ConfigManager:
         self._current_links: List[Link] = []
         self._config = self._load_config()
         self._init_state()
+
+    @property
+    def source_groups(self) -> List[SourceGroup]:
+        return self._config.source_groups
 
     def get_current_links(self) -> Iterable[Tuple[Link, List[Source], Destination]]:
         for link in self._current_links:

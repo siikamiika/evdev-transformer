@@ -1,7 +1,10 @@
 import threading
 from typing import (
     List,
+    Dict,
+    Tuple,
 )
+import time
 
 import libevdev
 
@@ -17,6 +20,7 @@ from .config import (
     SourceGroup,
     Destination,
     UinputDestination,
+    SubprocessDestination,
     Activator,
     Link,
 )
@@ -26,6 +30,7 @@ from .device import (
     EvdevSourceDevice,
     DestinationDevice,
     UinputDestinationDevice,
+    SubprocessDestinationDevice,
 )
 
 class Hub:
@@ -33,11 +38,17 @@ class Hub:
         self._config_manager = config_manager
         self._device_monitor = InputDeviceMonitor()
         self._source_devices: List[SourceDevice] = []
-        self._activated_links = {}
+        self._link_destination_device_cache: List[Tuple[str, str, DestinationDevice]] = []
+        self._activated_links: Dict[str, str] = {}
 
     def start(self):
         threading.Thread(target=self._monitor_devices).start()
         threading.Thread(target=self._monitor_config).start()
+        def _test_cycle_links_periodic():
+            while True:
+                time.sleep(5)
+                self._config_manager.activate_next_link('Unholy Alliance')
+        threading.Thread(target=_test_cycle_links_periodic).start()
 
     def _update_links(self):
         # TODO thread safe
@@ -56,9 +67,8 @@ class Hub:
                     matching_devices[0].release()
                 if source.name not in self._activated_links:
                     self._activated_links[source.name] = destination.name
+                    destination_device = self._get_destination_device(source, destination, matching_devices[0])
                     # TODO transforms
-                    # TODO other destination types
-                    destination_device = UinputDestinationDevice.from_source_device(matching_devices[0])
                     threading.Thread(
                         target=self._forward_events,
                         args=(matching_devices[0], destination_device, [])
@@ -66,6 +76,27 @@ class Hub:
         for key in self._activated_links:
             if key not in seen_sources:
                 del self._activated_links[key]
+
+    def _get_destination_device(
+        self,
+        source: Source,
+        destination: Destination,
+        source_device: SourceDevice,
+    ) -> DestinationDevice:
+        print('get destination device')
+        for source_name, destination_name, destination_device in self._link_destination_device_cache:
+            # TODO invalidate cache when updating matching config
+            if source_name == source.name and destination_name == destination.name:
+                return destination_device
+        # TODO other destination types
+        if isinstance(destination, UinputDestination):
+            destination_device = UinputDestinationDevice.create(source_device)
+        elif isinstance(destination, SubprocessDestination):
+            destination_device = SubprocessDestinationDevice.create(source_device, {'executable': destination.executable})
+        else:
+            raise NotImplementedError(f'Destination {destination} not implemented')
+        self._link_destination_device_cache.append((source.name, destination.name, destination_device))
+        return destination_device
 
     def _forward_events(
         self,
