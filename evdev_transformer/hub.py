@@ -1,4 +1,7 @@
 import threading
+from typing import (
+    List,
+)
 
 import libevdev
 
@@ -18,13 +21,18 @@ from .config import (
     Link,
 )
 from .system_events import InputDeviceMonitor
-from .device import EvdevWrapper
+from .device import (
+    SourceDevice,
+    EvdevSourceDevice,
+    DestinationDevice,
+    UinputDestinationDevice,
+)
 
 class Hub:
     def __init__(self, config_manager: ConfigManager):
         self._config_manager = config_manager
         self._device_monitor = InputDeviceMonitor()
-        self._source_devices = []
+        self._source_devices: List[SourceDevice] = []
         self._activated_links = {}
 
     def start(self):
@@ -38,7 +46,7 @@ class Hub:
             # TODO other source types
             for source in [s for s in sources if isinstance(s, EvdevUdevSource)]:
                 seen_sources.add(source.name)
-                matching_devices = [d for d, r in self._source_devices if r == source.udev_properties]
+                matching_devices = [d for d in self._source_devices if d.identifier == source.udev_properties]
                 if not matching_devices:
                     if source.name in self._activated_links:
                         del self._activated_links[source.name]
@@ -50,34 +58,38 @@ class Hub:
                     self._activated_links[source.name] = destination.name
                     # TODO transforms
                     # TODO other destination types
-                    threading.Thread(target=self._forward_to_uinput, args=(matching_devices[0], [])).start()
+                    destination_device = UinputDestinationDevice.from_source_device(matching_devices[0])
+                    threading.Thread(
+                        target=self._forward_events,
+                        args=(matching_devices[0], destination_device, [])
+                    ).start()
         for key in self._activated_links:
             if key not in seen_sources:
                 del self._activated_links[key]
 
-    def _create_evdev_device(self, udev_device):
-        devname = udev_device.get('DEVNAME')
-        fd = open(devname, 'rb')
-        return EvdevWrapper(libevdev.Device(fd))
-
-    def _forward_to_uinput(self, source_device, transforms):
-        print('forward_to_uinput', source_device._device.id, transforms)
-        uinput_device = source_device.create_uinput_device()
+    def _forward_events(
+        self,
+        source_device: SourceDevice,
+        destination_device: DestinationDevice,
+        transforms,
+    ):
+        print('forward', source_device, destination_device, transforms)
         # TODO transforms
         for events in source_device.events():
             print(deserialize_events(serialize_events(events)))
-            uinput_device.send_events(events)
+            destination_device.send_events(events)
 
     def _monitor_devices(self):
         for action, udev_device, rule in self._device_monitor.events():
             print(action, udev_device, rule)
             if action == 'add':
-                self._source_devices.append((self._create_evdev_device(udev_device), rule))
+                source_device = EvdevSourceDevice.from_udev(udev_device, rule)
+                self._source_devices.append(source_device)
                 self._update_links()
             elif action == 'remove':
-                for source_device, rule2 in self._source_devices:
-                    if rule == rule2:
-                        self._source_devices.remove((source_device, rule2))
+                for source_device in self._source_devices:
+                    if source_device.identifier == rule:
+                        self._source_devices.remove(source_device)
                         self._update_links()
                         break
 
