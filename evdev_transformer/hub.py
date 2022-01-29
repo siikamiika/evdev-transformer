@@ -32,6 +32,7 @@ class Hub:
         threading.Thread(target=self._monitor_config).start()
 
     def _update_links(self):
+        # TODO thread safe
         seen_sources = set()
         for link, sources, destination in self._config_manager.get_current_links():
             # TODO other source types
