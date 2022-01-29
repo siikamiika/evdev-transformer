@@ -15,7 +15,7 @@ class SourceDevice:
         self._device = device
         self._identifier = identifier
         self._pressed_keys: Set[int] = set()
-        self._event_loop_stopped: List[bool] = []
+        self._event_loop_stopped: bool = False
         self._buffer: List[libevdev.InputEvent] = []
         self._lock = threading.Lock()
 
@@ -53,19 +53,17 @@ class SourceDevice:
         return len(keys) == len(self._pressed_keys & keys)
 
     def release(self):
-        if self._event_loop_stopped:
-            self._event_loop_stopped[-1] = True
+        self._event_loop_stopped = True
 
     def events(self) -> Iterable[List[libevdev.InputEvent]]:
         with self._lock:
             self._grab_device()
-            loop_id = len(self._event_loop_stopped)
-            self._event_loop_stopped.append(False)
+            self._event_loop_stopped = False
             for events in self._events():
-                print(self._event_loop_stopped, loop_id, self._pressed_keys)
+                print(self._event_loop_stopped, self._pressed_keys)
                 yield events
                 # TODO forcefully release the pressed keys
-                if self._event_loop_stopped[loop_id] and not self._pressed_keys:
+                if self._event_loop_stopped and not self._pressed_keys:
                     self._release_device()
                     break
 
