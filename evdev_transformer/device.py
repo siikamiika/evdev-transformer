@@ -53,7 +53,8 @@ class SourceDevice:
         return len(keys) == len(self._pressed_keys & keys)
 
     def release(self):
-        self._event_loop_stopped = [True for _ in self._event_loop_stopped]
+        if self._event_loop_stopped:
+            self._event_loop_stopped[-1] = True
         self._release_device()
 
     def events(self) -> Iterable[List[libevdev.InputEvent]]:
@@ -223,7 +224,7 @@ class UinputDestinationDevice(DestinationDevice):
 class SubprocessDestinationDevice(DestinationDevice):
     def send_events(self, events: List[libevdev.InputEvent]):
         # TODO
-        print('wat')
+        print(events)
 
     def _create_device(self) -> libevdev.device.UinputDevice:
         print('TODO SubprocessDestinationDevice._create_device')

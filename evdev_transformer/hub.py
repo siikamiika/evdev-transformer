@@ -107,7 +107,7 @@ class Hub:
         print('forward', source_device, destination_device, transforms)
         # TODO transforms
         for events in source_device.events():
-            print(deserialize_events(serialize_events(events)))
+            # print(deserialize_events(serialize_events(events)))
             destination_device.send_events(events)
 
     def _monitor_devices(self):
