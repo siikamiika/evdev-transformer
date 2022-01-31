@@ -62,8 +62,13 @@ class SourceDevice:
             for events in self._events():
                 print(self._event_loop_stopped, self._pressed_keys)
                 yield events
-                # TODO forcefully release the pressed keys
-                if self._event_loop_stopped and not self._pressed_keys:
+                if self._event_loop_stopped:
+                    for code in self._pressed_keys:
+                        # release keys before releasing device
+                        yield [
+                            libevdev.InputEvent(code, 0),
+                            libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0),
+                        ]
                     self._release_device()
                     break
 
