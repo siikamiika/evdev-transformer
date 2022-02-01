@@ -69,6 +69,7 @@ class SourceDevice:
                             libevdev.InputEvent(code, 0),
                             libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0),
                         ]
+                    self._pressed_keys = set()
                     self._release_device()
                     break
 
