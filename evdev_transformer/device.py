@@ -15,6 +15,8 @@ class SourceDevice:
         self._device = device
         self._identifier = identifier
         self._pressed_keys: Set[int] = set()
+        self._abs_mt_tracking_ids_by_slot: Dict[int, int] = {}
+        self._prev_slot: Optional[int] = None
         self._event_loop_stop_count: int = 0
         self._buffer: List[libevdev.InputEvent] = []
         self._lock = threading.Lock()
@@ -60,7 +62,7 @@ class SourceDevice:
             with self._lock:
                 self._grab_device()
                 for events in self._events():
-                    print(self._event_loop_stop_count, self._pressed_keys)
+                    print(self._event_loop_stop_count, self._pressed_keys, self._abs_mt_tracking_ids_by_slot)
                     if self._event_loop_stop_count > 0:
                         yield from self._cleanup_released_device()
                         break
@@ -77,6 +79,7 @@ class SourceDevice:
     def _events(self):
         raise NotImplementedError('Override me')
 
+    # TODO group by event type
     def _handle_event(
         self,
         event: libevdev.InputEvent,
@@ -90,6 +93,18 @@ class SourceDevice:
                 self._pressed_keys -= {event.code}
             elif event.value == 1:
                 self._pressed_keys |= {event.code}
+        # https://www.kernel.org/doc/Documentation/input/multi-touch-protocol.txt
+        if event.matches(libevdev.EV_ABS.ABS_MT_SLOT):
+            self._prev_slot = event.value
+        elif event.matches(libevdev.EV_ABS.ABS_MT_TRACKING_ID):
+            if self._prev_slot is not None:
+                if event.value == -1:
+                    try:
+                        del self._abs_mt_tracking_ids_by_slot[self._prev_slot]
+                    except KeyError:
+                        pass
+                else:
+                    self._abs_mt_tracking_ids_by_slot[self._prev_slot] = event.code
         # handle buffer
         self._buffer.append(event)
         if event.matches(libevdev.EV_SYN.SYN_REPORT):
@@ -97,19 +112,31 @@ class SourceDevice:
             if len(self._buffer) > 1:
                 yield self._buffer
             self._buffer = []
+            self._prev_slot = None
 
     def _cleanup_released_device(self) -> Iterable[List[libevdev.InputEvent]]:
+        # release keys
         for code in self._pressed_keys:
             yield [
                 libevdev.InputEvent(code, 0),
                 libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0),
             ]
+        # reset multi touch slots
         if any(b == libevdev.EV_ABS.ABS_MT_TRACKING_ID for b in self.evbits.get(libevdev.EV_ABS, [])):
             yield [
                 libevdev.InputEvent(libevdev.EV_ABS.ABS_MT_TRACKING_ID, -1),
                 libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0),
             ]
+        for slot, tracking_id in self._abs_mt_tracking_ids_by_slot.items():
+            yield [
+                libevdev.InputEvent(libevdev.EV_ABS.ABS_MT_SLOT, slot),
+                libevdev.InputEvent(libevdev.EV_ABS.ABS_MT_TRACKING_ID, -1),
+                libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0),
+            ]
+        # reset internal state
         self._pressed_keys = set()
+        self._abs_mt_tracking_ids_by_slot = {}
+        self._prev_slot = None
         self._release_device()
 
 class EvdevSourceDevice(SourceDevice):
