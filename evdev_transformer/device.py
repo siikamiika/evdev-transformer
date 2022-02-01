@@ -63,14 +63,7 @@ class SourceDevice:
                 print(self._event_loop_stopped, self._pressed_keys)
                 yield events
                 if self._event_loop_stopped:
-                    for code in self._pressed_keys:
-                        # release keys before releasing device
-                        yield [
-                            libevdev.InputEvent(code, 0),
-                            libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0),
-                        ]
-                    self._pressed_keys = set()
-                    self._release_device()
+                    yield from self._cleanup_released_device()
                     break
 
     def _release_device(self):
@@ -102,6 +95,20 @@ class SourceDevice:
             if len(self._buffer) > 1:
                 yield self._buffer
             self._buffer = []
+
+    def _cleanup_released_device(self) -> Iterable[List[libevdev.InputEvent]]:
+        for code in self._pressed_keys:
+            yield [
+                libevdev.InputEvent(code, 0),
+                libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0),
+            ]
+        if any(b == libevdev.EV_ABS.ABS_MT_TRACKING_ID for b in self.evbits.get(libevdev.EV_ABS, [])):
+            yield [
+                libevdev.InputEvent(libevdev.EV_ABS.ABS_MT_TRACKING_ID, -1),
+                libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0),
+            ]
+        self._pressed_keys = set()
+        self._release_device()
 
 class EvdevSourceDevice(SourceDevice):
     @classmethod
