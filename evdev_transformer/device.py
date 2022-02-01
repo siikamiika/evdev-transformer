@@ -61,6 +61,7 @@ class SourceDevice:
         try:
             with self._lock:
                 self._grab_device()
+                yield from self._init_attached_device()
                 for events in self._events():
                     print(self._event_loop_stop_count, self._pressed_keys, self._abs_mt_tracking_ids_by_slot)
                     if self._event_loop_stop_count > 0:
@@ -108,7 +109,7 @@ class SourceDevice:
                     except KeyError:
                         pass
                 else:
-                    self._abs_mt_tracking_ids_by_slot[self._prev_slot] = event.code
+                    self._abs_mt_tracking_ids_by_slot[self._prev_slot] = event.value
         # handle buffer
         self._buffer.append(event)
         if event.matches(libevdev.EV_SYN.SYN_REPORT):
@@ -117,6 +118,16 @@ class SourceDevice:
                 yield self._buffer
             self._buffer = []
             self._prev_slot = None
+
+    def _init_attached_device(self) -> Iterable[List[libevdev.InputEvent]]:
+        # restore multi touch slots
+        # TODO expiration?
+        for slot, tracking_id in self._abs_mt_tracking_ids_by_slot.items():
+            yield [
+                libevdev.InputEvent(libevdev.EV_ABS.ABS_MT_SLOT, slot),
+                libevdev.InputEvent(libevdev.EV_ABS.ABS_MT_TRACKING_ID, tracking_id),
+                libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0),
+            ]
 
     def _cleanup_released_device(self) -> Iterable[List[libevdev.InputEvent]]:
         # release keys
@@ -137,10 +148,8 @@ class SourceDevice:
                 libevdev.InputEvent(libevdev.EV_ABS.ABS_MT_TRACKING_ID, -1),
                 libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0),
             ]
-        # reset internal state
+        # reset internal state except for multi touch so that it can be initialized on reattach
         self._pressed_keys = set()
-        self._abs_mt_tracking_ids_by_slot = {}
-        self._prev_slot = None
         self._release_device()
 
 class EvdevSourceDevice(SourceDevice):
