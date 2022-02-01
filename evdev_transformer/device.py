@@ -15,7 +15,7 @@ class SourceDevice:
         self._device = device
         self._identifier = identifier
         self._pressed_keys: Set[int] = set()
-        self._event_loop_stopped: bool = False
+        self._event_loop_stop_count: int = 0
         self._buffer: List[libevdev.InputEvent] = []
         self._lock = threading.Lock()
 
@@ -53,18 +53,20 @@ class SourceDevice:
         return len(keys) == len(self._pressed_keys & keys)
 
     def release(self):
-        self._event_loop_stopped = True
+        self._event_loop_stop_count += 1
 
     def events(self) -> Iterable[List[libevdev.InputEvent]]:
-        with self._lock:
-            self._grab_device()
-            self._event_loop_stopped = False
-            for events in self._events():
-                print(self._event_loop_stopped, self._pressed_keys)
-                yield events
-                if self._event_loop_stopped:
-                    yield from self._cleanup_released_device()
-                    break
+        try:
+            with self._lock:
+                self._grab_device()
+                for events in self._events():
+                    print(self._event_loop_stop_count, self._pressed_keys)
+                    if self._event_loop_stop_count > 0:
+                        yield from self._cleanup_released_device()
+                        break
+                    yield events
+        finally:
+            self._event_loop_stop_count = max(self._event_loop_stop_count - 1, 0)
 
     def _release_device(self):
         raise NotImplementedError('Override me')
