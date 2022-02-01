@@ -97,7 +97,11 @@ class SourceDevice:
         if event.matches(libevdev.EV_ABS.ABS_MT_SLOT):
             self._prev_slot = event.value
         elif event.matches(libevdev.EV_ABS.ABS_MT_TRACKING_ID):
-            if self._prev_slot is not None:
+            if self._prev_slot is None:
+                for slot in self._abs_mt_tracking_ids_by_slot:
+                    self._prev_slot = slot
+                    break
+            if self._prev_slot:
                 if event.value == -1:
                     try:
                         del self._abs_mt_tracking_ids_by_slot[self._prev_slot]
