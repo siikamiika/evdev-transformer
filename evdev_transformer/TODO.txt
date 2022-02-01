@@ -11,3 +11,5 @@
 - queue link switching
     - only allow one link in queue
     - don't queue current link
+- transforms should define evbits, absinfo, rep_value or inherit 1:1
+    - fake vendor/product for generic devices?
