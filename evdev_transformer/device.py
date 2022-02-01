@@ -137,14 +137,14 @@ class SourceDevice:
                 libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0),
             ]
         # reset multi touch slots
-        if any(b == libevdev.EV_ABS.ABS_MT_TRACKING_ID for b in self.evbits.get(libevdev.EV_ABS, [])):
-            yield [
-                libevdev.InputEvent(libevdev.EV_ABS.ABS_MT_TRACKING_ID, -1),
-                libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0),
-            ]
         for slot, tracking_id in self._abs_mt_tracking_ids_by_slot.items():
             yield [
                 libevdev.InputEvent(libevdev.EV_ABS.ABS_MT_SLOT, slot),
+                libevdev.InputEvent(libevdev.EV_ABS.ABS_MT_TRACKING_ID, -1),
+                libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0),
+            ]
+        if any(b == libevdev.EV_ABS.ABS_MT_TRACKING_ID for b in self.evbits.get(libevdev.EV_ABS, [])):
+            yield [
                 libevdev.InputEvent(libevdev.EV_ABS.ABS_MT_TRACKING_ID, -1),
                 libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0),
             ]
