@@ -8,3 +8,6 @@
 - handle multiple devices with same vendor/product
 - forward source to multiple destinations
 - link specific transforms
+- queue link switching
+    - only allow one link in queue
+    - don't queue current link
