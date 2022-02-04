@@ -8,6 +8,7 @@ from typing import (
 )
 import threading
 import subprocess
+import json
 
 import libevdev
 
@@ -280,17 +281,52 @@ class UinputDestinationDevice(DestinationDevice):
 class SubprocessDestinationDevice(DestinationDevice):
     def _create_device(self) -> libevdev.device.UinputDevice:
         class _SubprocessDevice:
-            def __init__(self, handle: subprocess.Popen):
+            def __init__(self, handle: subprocess.Popen, details: Dict):
                 self._handle = handle
+                self._details = details
+                self._send_details()
             def send_events(self, events: List[libevdev.InputEvent]):
                 if self._handle.stdin:
                     self._handle.stdin.write(serialize_events(events) + b'\n')
                     self._handle.stdin.flush()
                 else:
                     raise Exception('Could not write to subprocess handle')
+            def _send_details(self):
+                if self._handle.stdin:
+                    self._handle.stdin.write(json.dumps(self._details).encode('utf-8') + b'\n')
+                    self._handle.stdin.flush()
+                else:
+                    raise Exception('Could not write to subprocess handle')
         # TODO two-way communication?
         handle = subprocess.Popen([self._properties['executable']], stdin=subprocess.PIPE)
-        return _SubprocessDevice(handle)
+        return _SubprocessDevice(handle, self._serialize())
+
+    def _serialize(self) -> Dict:
+        return {
+            'type': type(self).__name__,
+            'name': self._name,
+            'id': self._id,
+            'evbits': {
+                t.value: [sc.value for sc in c]
+                for t, c
+                in self._evbits.items()
+            },
+            'absinfo': {
+                c.value: {
+                    'minimum': ai.minimum,
+                    'maximum': ai.maximum,
+                    'fuzz': ai.fuzz,
+                    'flat': ai.flat,
+                    'resolution': ai.resolution,
+                    'value': ai.value,
+                }
+                for c, ai in self._absinfo.items()
+            },
+            'rep_value': {
+                c.value: v
+                for c, v in self._rep_value.items()
+            },
+        }
 
 class HidGadgetDestinationDevice(DestinationDevice):
     # TODO
