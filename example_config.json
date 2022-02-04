@@ -43,7 +43,9 @@
             "properties": {
                 "udev": {
                     "ID_VENDOR": "Apple_Inc.",
-                    "ID_INPUT_TOUCHPAD": "1"
+                    "ID_INPUT_TOUCHPAD": "1",
+                    "MAJOR": "13",
+                    "MINOR": "71"
                 }
             }
         },
