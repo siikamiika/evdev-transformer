@@ -40,6 +40,7 @@ class Hub:
         self._source_devices: List[SourceDevice] = []
         self._link_destination_device_cache: List[Tuple[str, str, DestinationDevice]] = []
         self._activated_links: Dict[str, str] = {}
+        self._lock = threading.Lock()
 
     def start(self):
         threading.Thread(target=self._monitor_devices).start()
@@ -51,31 +52,31 @@ class Hub:
         threading.Thread(target=_test_cycle_links_periodic).start()
 
     def _update_links(self):
-        # TODO thread safe
-        seen_sources = set()
-        for link, sources, destination in self._config_manager.get_current_links():
-            # TODO other source types
-            for source in [s for s in sources if isinstance(s, EvdevUdevSource)]:
-                seen_sources.add(source.name)
-                matching_devices = [d for d in self._source_devices if d.identifier == source.udev_properties]
-                if not matching_devices:
-                    if source.name in self._activated_links:
+        with self._lock:
+            seen_sources = set()
+            for link, sources, destination in self._config_manager.get_current_links():
+                # TODO other source types
+                for source in [s for s in sources if isinstance(s, EvdevUdevSource)]:
+                    seen_sources.add(source.name)
+                    matching_devices = [d for d in self._source_devices if d.identifier == source.udev_properties]
+                    if not matching_devices:
+                        if source.name in self._activated_links:
+                            del self._activated_links[source.name]
+                        continue
+                    if self._activated_links.get(source.name) not in [None, destination.name]:
                         del self._activated_links[source.name]
-                    continue
-                if self._activated_links.get(source.name) not in [None, destination.name]:
-                    del self._activated_links[source.name]
-                    matching_devices[0].release()
-                if source.name not in self._activated_links:
-                    self._activated_links[source.name] = destination.name
-                    destination_device = self._get_destination_device(source, destination, matching_devices[0])
-                    # TODO transforms
-                    threading.Thread(
-                        target=self._forward_events,
-                        args=(matching_devices[0], destination_device, [])
-                    ).start()
-        for key in self._activated_links:
-            if key not in seen_sources:
-                del self._activated_links[key]
+                        matching_devices[0].release()
+                    if source.name not in self._activated_links:
+                        self._activated_links[source.name] = destination.name
+                        destination_device = self._get_destination_device(source, destination, matching_devices[0])
+                        # TODO transforms
+                        threading.Thread(
+                            target=self._forward_events,
+                            args=(matching_devices[0], destination_device, [])
+                        ).start()
+            for key in self._activated_links:
+                if key not in seen_sources:
+                    del self._activated_links[key]
 
     def _get_destination_device(
         self,
