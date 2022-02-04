@@ -52,7 +52,7 @@
             "type": "evdev_unix_socket",
             "transforms": [],
             "properties": {
-                "socket_name": "linux_chromebook.sock",
+                "host": "isekai",
                 "evdev_id": {
                     "vendor": 1133,
                     "product": 49693

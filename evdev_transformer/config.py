@@ -121,7 +121,7 @@ class EvdevUnixSocketSource(Source):
 
     def _validate(self):
         super()._validate()
-        assert isinstance(self._properties.get('socket_name'), str)
+        assert isinstance(self._properties.get('host'), str)
         assert isinstance(self._properties.get('evdev_id'), dict)
         assert all(isinstance(self._properties['evdev_id'][k], int) for k in ['vendor', 'product'])
 

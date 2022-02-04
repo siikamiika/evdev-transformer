@@ -215,7 +215,7 @@ class EvdevSourceDevice(SourceDevice):
                 continue
             break
 
-class SubprocessSourceDevice(SourceDevice):
+class UnixSocketSourceDevice(SourceDevice):
     pass
 
 class DestinationDevice:

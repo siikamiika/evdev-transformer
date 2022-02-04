@@ -28,6 +28,7 @@ from .system_events import InputDeviceMonitor
 from .device import (
     SourceDevice,
     EvdevSourceDevice,
+    UnixSocketSourceDevice,
     DestinationDevice,
     UinputDestinationDevice,
     SubprocessDestinationDevice,
