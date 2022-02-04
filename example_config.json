@@ -94,7 +94,7 @@
             "type": "subprocess",
             "transforms": [],
             "properties": {
-                "executable": "cat"
+                "executable": "ssh localhost -- cat"
             }
         }
     ],

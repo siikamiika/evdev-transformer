@@ -298,7 +298,7 @@ class SubprocessDestinationDevice(DestinationDevice):
                 else:
                     raise Exception('Could not write to subprocess handle')
         # TODO two-way communication?
-        handle = subprocess.Popen([self._properties['executable']], stdin=subprocess.PIPE)
+        handle = subprocess.Popen(self._properties['executable'], stdin=subprocess.PIPE, shell=True)
         return _SubprocessDevice(handle, self._serialize())
 
     def _serialize(self) -> Dict:
