@@ -7,8 +7,14 @@ from typing import (
     Optional,
 )
 import threading
+import subprocess
 
 import libevdev
+
+from .serde import (
+    serialize_events,
+    deserialize_events
+)
 
 class SourceDevice:
     def __init__(self, device, identifier):
@@ -226,7 +232,7 @@ class DestinationDevice:
         self._evbits = evbits
         self._absinfo = absinfo
         self._rep_value = rep_value
-        self._properties = properties
+        self._properties = properties or {}
         self._device = self._create_device()
 
     @classmethod
@@ -245,15 +251,12 @@ class DestinationDevice:
         )
 
     def send_events(self, events: List[libevdev.InputEvent]):
-        raise NotImplementedError('Override me')
+        self._device.send_events(events)
 
     def _create_device(self):
         raise NotImplementedError('Override me')
 
 class UinputDestinationDevice(DestinationDevice):
-    def send_events(self, events: List[libevdev.InputEvent]):
-        self._device.send_events(events)
-
     def _create_device(self) -> libevdev.device.UinputDevice:
         device = libevdev.Device()
         device.name = self._name
@@ -275,12 +278,19 @@ class UinputDestinationDevice(DestinationDevice):
         return device.create_uinput_device()
 
 class SubprocessDestinationDevice(DestinationDevice):
-    def send_events(self, events: List[libevdev.InputEvent]):
-        # TODO
-        print(events)
-
     def _create_device(self) -> libevdev.device.UinputDevice:
-        print('TODO SubprocessDestinationDevice._create_device')
+        class _SubprocessDevice:
+            def __init__(self, handle: subprocess.Popen):
+                self._handle = handle
+            def send_events(self, events: List[libevdev.InputEvent]):
+                if self._handle.stdin:
+                    self._handle.stdin.write(serialize_events(events) + b'\n')
+                    self._handle.stdin.flush()
+                else:
+                    raise Exception('Could not write to subprocess handle')
+        # TODO two-way communication?
+        handle = subprocess.Popen([self._properties['executable']], stdin=subprocess.PIPE)
+        return _SubprocessDevice(handle)
 
 class HidGadgetDestinationDevice(DestinationDevice):
     # TODO
