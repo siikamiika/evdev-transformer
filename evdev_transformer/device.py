@@ -67,7 +67,7 @@ class SourceDevice:
                 self._grab_device()
                 yield from self._init_attached_device()
                 for events in self._events():
-                    print(self._event_loop_stop_count, self._pressed_keys, self._abs_mt_tracking_ids_by_slot)
+                    # print(self._event_loop_stop_count, self._pressed_keys, self._abs_mt_tracking_ids_by_slot)
                     if self._event_loop_stop_count > 0:
                         yield from self._cleanup_released_device()
                         break
