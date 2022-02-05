@@ -3,7 +3,7 @@ from typing import (
     List,
     Dict,
     Tuple,
-    TextIO,
+    Iterable,
 )
 import time
 
@@ -152,9 +152,9 @@ class Hub:
                     self._update_links()
 
     def _handle_ipc(self):
-        def _handle_stream(stream: TextIO):
-            for line in stream:
-                print(line)
+        def _handle_events(events: Iterable[Dict]):
+            for event in events:
+                print(event)
             print('end of stream')
-        for stream in self._ipc_manager.events():
-            threading.Thread(target=_handle_stream, args=(stream,)).start()
+        for events in self._ipc_manager.events():
+            threading.Thread(target=_handle_events, args=(events,)).start()

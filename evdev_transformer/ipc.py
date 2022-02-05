@@ -6,6 +6,7 @@ import threading
 from typing import (
     Iterable,
     TextIO,
+    Dict,
 )
 import json
 
@@ -15,8 +16,14 @@ class IpcManager:
         self._sock = self._get_socket()
         threading.Thread(target=self._handle_socket).start()
 
-    def events(self) -> Iterable[TextIO]:
-        yield from iter(self._queue.get, None)
+    def events(self) -> Iterable[Iterable[Dict]]:
+        def _events(stream: TextIO):
+            for line in stream:
+                data = json.loads(line)
+                assert isinstance(data, dict)
+                yield data
+        for stream in iter(self._queue.get, None):
+            yield _events(stream)
 
     def _get_socket(self) -> socket.socket:
         # bash: "${XDG_RUNTIME_DIR:-/tmp}/evdev-ipc.sock"
