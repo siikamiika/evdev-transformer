@@ -10,13 +10,9 @@ import threading
 import subprocess
 import json
 import socket
+import functools
 
 import libevdev
-
-from .serde import (
-    serialize_events,
-    deserialize_events
-)
 
 class SourceDevice:
     def __init__(self, device, identifier):
@@ -217,7 +213,74 @@ class EvdevSourceDevice(SourceDevice):
             break
 
 class UnixSocketSourceDevice(SourceDevice):
-    pass
+    @classmethod
+    def from_ipc(
+        cls,
+        details: Dict,
+        events: Iterable[Dict],
+    ):
+        class _Device:
+            def __init__(self, details, events):
+                self.details = details
+                self._events = events
+            def events(self):
+                for events in self._events:
+                    for event in events['events']:
+                        yield libevdev.InputEvent(
+                            libevdev.evbit(event['type'], event['code']),
+                            event['value']
+                        )
+        device = _Device(details['data'], events)
+        identifier = {
+            'host': details['host'],
+            'vendor': details['vendor'],
+            'product': details['product'],
+        }
+        return cls(device, identifier)
+
+    @property
+    def name(self) -> str:
+        return self._device.details['name']
+
+    @property
+    def id(self) -> Dict[str, int]:
+        return self._device.details['id']
+
+    @property
+    @functools.cache
+    def evbits(self) -> Dict[libevdev.EventType, List[libevdev.EventCode]]:
+        return {
+            libevdev.evbit(int(t)): [libevdev.evbit(int(t), c) for c in cs]
+            for t, cs
+            in self._device.details['evbits'].items()
+        }
+
+    @property
+    @functools.cache
+    def absinfo(self) -> Dict[libevdev.EventCode, libevdev.InputAbsInfo]:
+        return {
+            libevdev.evbit('EV_ABS', int(c)): libevdev.InputAbsInfo(**ai)
+            for c, ai
+            in self._device.details['absinfo'].items()
+        }
+
+    @property
+    @functools.cache
+    def rep_value(self) -> Dict[libevdev.EventCode, int]:
+        return {
+            libevdev.evbit('EV_REP', int(c)): v
+            for c, v in self._device.details['rep_value'].items()
+        }
+
+    def _release_device(self):
+        return
+
+    def _grab_device(self):
+        return
+
+    def _events(self):
+        for event in self._device.events():
+            yield from self._handle_event(event)
 
 class DestinationDevice:
     def __init__(
@@ -280,7 +343,8 @@ class UinputDestinationDevice(DestinationDevice):
         return device.create_uinput_device()
 
 class SubprocessDestinationDevice(DestinationDevice):
-    def _create_device(self) -> libevdev.device.UinputDevice:
+    # TODO watchdog
+    def _create_device(self):
         class _SubprocessDevice:
             def __init__(self, handle: subprocess.Popen, details: Dict):
                 self._handle = handle
@@ -288,7 +352,12 @@ class SubprocessDestinationDevice(DestinationDevice):
                 self._host = socket.gethostname()
                 self._send_details()
             def send_events(self, events: List[libevdev.InputEvent]):
-                self._send_data(serialize_events(events))
+                self._send_data(json.dumps({
+                    'events': [
+                        {'type': e.type.value, 'code': e.code.value, 'value': e.value}
+                        for e in events
+                    ]
+                }).encode('utf-8'))
             def _send_details(self):
                 data = json.dumps({
                     'host': self._host,

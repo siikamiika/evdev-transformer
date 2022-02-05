@@ -71,6 +71,10 @@ class Source:
     def name(self) -> str:
         return self._name
 
+    @property
+    def identifier(self) -> Dict:
+        raise NotImplementedError('Override me')
+
     @classmethod
     def from_dict(cls, data: Dict) -> Source:
         cls_ = {
@@ -105,7 +109,7 @@ class EvdevUdevSource(Source):
         return d
 
     @property
-    def udev_properties(self):
+    def identifier(self):
         return self._properties['udev']
 
     def _validate(self):
@@ -119,11 +123,19 @@ class EvdevUnixSocketSource(Source):
         d['type'] = 'evdev_unix_socket'
         return d
 
+    @property
+    def identifier(self):
+        return {
+            'host': self._properties['host'],
+            'vendor': self._properties['vendor'],
+            'product': self._properties['product'],
+        }
+
     def _validate(self):
         super()._validate()
         assert isinstance(self._properties.get('host'), str)
-        assert isinstance(self._properties.get('evdev_id'), dict)
-        assert all(isinstance(self._properties['evdev_id'][k], int) for k in ['vendor', 'product'])
+        assert isinstance(self._properties.get('vendor'), int)
+        assert isinstance(self._properties.get('product'), int)
 
 class SourceGroup:
     def __init__(

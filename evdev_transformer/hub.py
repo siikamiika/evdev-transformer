@@ -9,10 +9,6 @@ import time
 
 import libevdev
 
-from .serde import (
-    serialize_events,
-    deserialize_events
-)
 from .config import (
     ConfigManager,
     Source,
@@ -60,10 +56,9 @@ class Hub:
         with self._lock:
             seen_sources = set()
             for link, sources, destination in self._config_manager.get_current_links():
-                # TODO other source types
-                for source in [s for s in sources if isinstance(s, EvdevUdevSource)]:
+                for source in sources:
                     seen_sources.add(source.name)
-                    matching_devices = [d for d in self._source_devices if d.identifier == source.udev_properties]
+                    matching_devices = [d for d in self._source_devices if d.identifier == source.identifier]
                     if not matching_devices:
                         if source.name in self._activated_links:
                             del self._activated_links[source.name]
@@ -113,7 +108,6 @@ class Hub:
         print('forward', source_device, destination_device, transforms)
         # TODO transforms
         for events in source_device.events():
-            # print(deserialize_events(serialize_events(events)))
             destination_device.send_events(events)
 
     def _monitor_devices(self):
@@ -137,8 +131,8 @@ class Hub:
             if event['type'] == 'add':
                 if isinstance(obj, Source):
                     if isinstance(obj, EvdevUdevSource):
-                        print('add monitored attributes', obj.udev_properties)
-                        self._device_monitor.add_monitored_attrs(obj.udev_properties)
+                        print('add monitored attributes', obj.identifier)
+                        self._device_monitor.add_monitored_attrs(obj.identifier)
                     elif isinstance(obj, EvdevUnixSocketSource):
                         print('TODO', obj)
                 elif isinstance(obj, SourceGroup):
@@ -153,8 +147,12 @@ class Hub:
 
     def _handle_ipc(self):
         def _handle_events(events: Iterable[Dict]):
-            for event in events:
-                print(event)
-            print('end of stream')
+            events_iter = iter(events)
+            first_event = next(events_iter)
+            # TODO filter based on config
+            # TODO unique
+            source_device = UnixSocketSourceDevice.from_ipc(first_event, events_iter)
+            self._source_devices.append(source_device)
+            self._update_links()
         for events in self._ipc_manager.events():
             threading.Thread(target=_handle_events, args=(events,)).start()

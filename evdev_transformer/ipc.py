@@ -27,6 +27,7 @@ class IpcManager:
 
     def _get_socket(self) -> socket.socket:
         # bash: "${XDG_RUNTIME_DIR:-/tmp}/evdev-ipc.sock"
+        # TODO when root use /run
         base_path = os.environ.get('XDG_RUNTIME_DIR', '/tmp')
         socket_path = os.path.join(base_path, 'evdev-ipc.sock')
         with contextlib.suppress(FileNotFoundError):

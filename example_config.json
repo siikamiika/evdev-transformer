@@ -55,10 +55,18 @@
             "transforms": [],
             "properties": {
                 "host": "isekai",
-                "evdev_id": {
-                    "vendor": 1133,
-                    "product": 49693
-                }
+                "vendor": 1133,
+                "product": 49693
+            }
+        },
+        {
+            "name": "Apple Inc. Magic Trackpad 2 (Linux Chromebook)",
+            "type": "evdev_unix_socket",
+            "transforms": [],
+            "properties": {
+                "host": "isekai",
+                "vendor": 1452,
+                "product": 613
             }
         }
     ],
@@ -73,7 +81,8 @@
         {
             "name": "Game Input",
             "sources": [
-                "Logitech Gamepad F310 (Linux Chromebook)"
+                "Logitech Gamepad F310 (Linux Chromebook)",
+                "Apple Inc. Magic Trackpad 2 (Linux Chromebook)"
             ]
         }
     ],
@@ -96,7 +105,7 @@
             "type": "subprocess",
             "transforms": [],
             "properties": {
-                "executable": "ssh localhost -- cat"
+                "executable": "ssh localhost -- socat - UNIX-CONNECT:\"$XDG_RUNTIME_DIR\/evdev-ipc.sock\""
             }
         }
     ],
