@@ -1,0 +1,40 @@
+{
+    "config_version": 1,
+    "sources": [
+        {
+            "name": "Touchpad",
+            "type": "evdev_udev",
+            "transforms": [],
+            "properties": {
+                "udev": {
+                    "ID_INPUT_TOUCHPAD": "1"
+                }
+            }
+        }
+    ],
+    "source_groups": [
+        {
+            "name": "Laptop Input",
+            "sources": [
+                "Touchpad"
+            ]
+        }
+    ],
+    "destinations": [
+        {
+            "name": "isekai",
+            "type": "subprocess",
+            "transforms": [],
+            "properties": {
+                "executable": "ssh isekai.lan -- socat - UNIX-CONNECT:\"$XDG_RUNTIME_DIR\/evdev-ipc.sock\""
+            }
+        }
+    ],
+    "links": [
+        {
+            "source_group": "Laptop Input",
+            "destination": "isekai",
+            "activators": []
+        }
+    ]
+}

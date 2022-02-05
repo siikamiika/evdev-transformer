@@ -13,6 +13,16 @@
                     "MINOR": "71"
                 }
             }
+        },
+        {
+            "name": "Chromebook Touchpad (Remote)",
+            "type": "evdev_unix_socket",
+            "transforms": [],
+            "properties": {
+                "host": "sm-crarch",
+                "vendor": 1739,
+                "product": 52705
+            }
         }
     ],
     "source_groups": [
