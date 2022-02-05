@@ -3,6 +3,7 @@ from typing import (
     List,
     Dict,
     Tuple,
+    TextIO,
 )
 import time
 
@@ -33,11 +34,13 @@ from .device import (
     UinputDestinationDevice,
     SubprocessDestinationDevice,
 )
+from .ipc import IpcManager
 
 class Hub:
     def __init__(self, config_manager: ConfigManager):
         self._config_manager = config_manager
         self._device_monitor = InputDeviceMonitor()
+        self._ipc_manager = IpcManager()
         self._source_devices: List[SourceDevice] = []
         self._link_destination_device_cache: List[Tuple[str, str, DestinationDevice]] = []
         self._activated_links: Dict[str, str] = {}
@@ -46,6 +49,7 @@ class Hub:
     def start(self):
         threading.Thread(target=self._monitor_devices).start()
         threading.Thread(target=self._monitor_config).start()
+        threading.Thread(target=self._handle_ipc).start()
         def _test_cycle_links_periodic():
             while True:
                 time.sleep(5)
@@ -146,3 +150,11 @@ class Hub:
             elif event['type'] == 'remove':
                 if isinstance(obj, Link):
                     self._update_links()
+
+    def _handle_ipc(self):
+        def _handle_stream(stream: TextIO):
+            for line in stream:
+                print(line)
+            print('end of stream')
+        for stream in self._ipc_manager.events():
+            threading.Thread(target=_handle_stream, args=(stream,)).start()
