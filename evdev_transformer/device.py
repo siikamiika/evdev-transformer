@@ -9,6 +9,7 @@ from typing import (
 import threading
 import subprocess
 import json
+import socket
 
 import libevdev
 
@@ -284,16 +285,21 @@ class SubprocessDestinationDevice(DestinationDevice):
             def __init__(self, handle: subprocess.Popen, details: Dict):
                 self._handle = handle
                 self._details = details
+                self._host = socket.gethostname()
                 self._send_details()
             def send_events(self, events: List[libevdev.InputEvent]):
-                if self._handle.stdin:
-                    self._handle.stdin.write(serialize_events(events) + b'\n')
-                    self._handle.stdin.flush()
-                else:
-                    raise Exception('Could not write to subprocess handle')
+                self._send_data(serialize_events(events))
             def _send_details(self):
+                data = json.dumps({
+                    'host': self._host,
+                    'vendor': self._details['id']['vendor'],
+                    'product': self._details['id']['product'],
+                    'data': self._details,
+                }).encode('utf-8')
+                self._send_data(data)
+            def _send_data(self, data: bytes):
                 if self._handle.stdin:
-                    self._handle.stdin.write(json.dumps(self._details).encode('utf-8') + b'\n')
+                    self._handle.stdin.write(data + b'\n')
                     self._handle.stdin.flush()
                 else:
                     raise Exception('Could not write to subprocess handle')
