@@ -1,0 +1,43 @@
+{
+    "config_version": 1,
+    "sources": [
+        {
+            "name": "Apple Inc. Magic Trackpad 2",
+            "type": "evdev_udev",
+            "transforms": [],
+            "properties": {
+                "udev": {
+                    "ID_VENDOR": "Apple_Inc.",
+                    "ID_INPUT_TOUCHPAD": "1",
+                    "MAJOR": "13",
+                    "MINOR": "71"
+                }
+            }
+        }
+    ],
+    "source_groups": [
+        {
+            "name": "🍎",
+            "sources": [
+                "Apple Inc. Magic Trackpad 2"
+            ]
+        }
+    ],
+    "destinations": [
+        {
+            "name": "es",
+            "type": "subprocess",
+            "transforms": [],
+            "properties": {
+                "executable": "ssh es.lan -- socat - UNIX-CONNECT:\"$XDG_RUNTIME_DIR\/evdev-ipc.sock\""
+            }
+        }
+    ],
+    "links": [
+        {
+            "source_group": "🍎",
+            "destination": "es",
+            "activators": []
+        }
+    ]
+}
