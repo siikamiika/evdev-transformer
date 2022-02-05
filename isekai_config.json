@@ -31,6 +31,12 @@
             "sources": [
                 "Apple Inc. Magic Trackpad 2"
             ]
+        },
+        {
+            "name": "Laptop (Remote)",
+            "sources": [
+                "Chromebook Touchpad (Remote)"
+            ]
         }
     ],
     "destinations": [
@@ -41,12 +47,23 @@
             "properties": {
                 "executable": "ssh es.lan -- socat - UNIX-CONNECT:\"$XDG_RUNTIME_DIR\/evdev-ipc.sock\""
             }
+        },
+        {
+            "name": "Master",
+            "type": "uinput",
+            "transforms": [],
+            "properties": {}
         }
     ],
     "links": [
         {
             "source_group": "🍎",
             "destination": "es",
+            "activators": []
+        },
+        {
+            "source_group": "Laptop (Remote)",
+            "destination": "Master",
             "activators": []
         }
     ]
