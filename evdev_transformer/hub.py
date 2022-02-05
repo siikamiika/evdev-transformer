@@ -46,11 +46,11 @@ class Hub:
         threading.Thread(target=self._monitor_devices).start()
         threading.Thread(target=self._monitor_config).start()
         threading.Thread(target=self._handle_ipc).start()
-        def _test_cycle_links_periodic():
-            while True:
-                time.sleep(5)
-                self._config_manager.activate_next_link('Unholy Alliance')
-        threading.Thread(target=_test_cycle_links_periodic).start()
+        # def _test_cycle_links_periodic():
+        #     while True:
+        #         time.sleep(5)
+        #         self._config_manager.activate_next_link('Unholy Alliance')
+        # threading.Thread(target=_test_cycle_links_periodic).start()
 
     def _update_links(self):
         with self._lock:
