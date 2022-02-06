@@ -383,7 +383,7 @@ class SubprocessDestinationDevice(DestinationDevice):
             def _create_handle(self) -> subprocess.Popen:
                 # TODO two-way communication?
                 return subprocess.Popen(self._command, stdin=subprocess.PIPE, shell=True)
-        return _SubprocessDevice(self._properties['executable'], self._serialize())
+        return _SubprocessDevice(self._properties['command'], self._serialize())
 
     def _serialize(self) -> Dict:
         return {

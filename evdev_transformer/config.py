@@ -231,12 +231,12 @@ class SubprocessDestination(Destination):
         return d
 
     @property
-    def executable(self) -> str:
-        return self._properties['executable']
+    def command(self) -> str:
+        return self._properties['command']
 
     def _validate(self):
         super()._validate()
-        assert isinstance(self._properties.get('executable'), str)
+        assert isinstance(self._properties.get('command'), str)
 
 class Activator:
     def __init__(self, properties: Dict):

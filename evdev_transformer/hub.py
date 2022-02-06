@@ -100,7 +100,7 @@ class Hub:
         if isinstance(destination, UinputDestination):
             destination_device = UinputDestinationDevice.create(source_device)
         elif isinstance(destination, SubprocessDestination):
-            destination_device = SubprocessDestinationDevice.create(source_device, {'executable': destination.executable})
+            destination_device = SubprocessDestinationDevice.create(source_device, {'command': destination.command})
         else:
             raise NotImplementedError(f'Destination {destination} not implemented')
         self._link_destination_device_cache.append((source.name, destination.name, destination_device))

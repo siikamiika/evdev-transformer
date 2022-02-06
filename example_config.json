@@ -105,7 +105,7 @@
             "type": "subprocess",
             "transforms": [],
             "properties": {
-                "executable": "ssh localhost -- socat - UNIX-CONNECT:\"$XDG_RUNTIME_DIR\/evdev-ipc.sock\""
+                "command": "ssh localhost -- socat - UNIX-CONNECT:\"$XDG_RUNTIME_DIR\/evdev-ipc.sock\""
             }
         }
     ],
