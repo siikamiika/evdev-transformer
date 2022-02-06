@@ -26,7 +26,7 @@
             "type": "subprocess",
             "transforms": [],
             "properties": {
-                "executable": "ssh isekai.lan -- socat - UNIX-CONNECT:\"$XDG_RUNTIME_DIR\/evdev-ipc.sock\""
+                "executable": "ssh isekai.lan -- socat - UNIX-CONNECT:/run/user/1000/evdev-ipc.sock"
             }
         }
     ],
