@@ -346,12 +346,15 @@ class SubprocessDestinationDevice(DestinationDevice):
     # TODO watchdog
     def _create_device(self):
         class _SubprocessDevice:
-            def __init__(self, handle: subprocess.Popen, details: Dict):
-                self._handle = handle
+            def __init__(self, command: str, details: Dict):
+                self._command = command
+                self._handle = self._create_handle()
                 self._details = details
                 self._host = socket.gethostname()
-                self._send_details()
+                self._details_sent = False
             def send_events(self, events: List[libevdev.InputEvent]):
+                if not self._details_sent:
+                    self._send_details()
                 self._send_data(json.dumps({
                     'events': [
                         {'type': e.type.value, 'code': e.code.value, 'value': e.value}
@@ -366,15 +369,21 @@ class SubprocessDestinationDevice(DestinationDevice):
                     'data': self._details,
                 }).encode('utf-8')
                 self._send_data(data)
+                self._details_sent = True
             def _send_data(self, data: bytes):
-                if self._handle.stdin:
+                try:
+                    if self._handle.stdin is None:
+                        raise AttributeError
                     self._handle.stdin.write(data + b'\n')
                     self._handle.stdin.flush()
-                else:
-                    raise Exception('Could not write to subprocess handle')
-        # TODO two-way communication?
-        handle = subprocess.Popen(self._properties['executable'], stdin=subprocess.PIPE, shell=True)
-        return _SubprocessDevice(handle, self._serialize())
+                except (BrokenPipeError, AttributeError):
+                    print('Created new handle')
+                    self._handle = self._create_handle()
+                    self._details_sent = False
+            def _create_handle(self) -> subprocess.Popen:
+                # TODO two-way communication?
+                return subprocess.Popen(self._command, stdin=subprocess.PIPE, shell=True)
+        return _SubprocessDevice(self._properties['executable'], self._serialize())
 
     def _serialize(self) -> Dict:
         return {
