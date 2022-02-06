@@ -71,7 +71,6 @@ class Hub:
                             # TODO this can still leak memory
                             extra_device.release()
                             self._source_devices.remove(extra_device)
-                        # TODO not necessarily the current
                         if source.name in self._activated_links:
                             del self._activated_links[source.name]
                     if source.name not in self._activated_links:
