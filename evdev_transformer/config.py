@@ -8,6 +8,7 @@ from typing import (
 )
 import queue
 import json
+import threading
 
 import libevdev
 
@@ -423,6 +424,7 @@ class ConfigManager:
         self._event_queue = queue.Queue()
         self._current_links: List[Link] = []
         self._config = self._load_config()
+        self._lock = threading.Lock()
         self._init_state()
 
     @property
@@ -446,30 +448,31 @@ class ConfigManager:
         source_group: str,
         activator: Optional[Activator] = None,
     ):
-        current_link = None
-        for link in self._current_links:
-            if link.source_group == source_group:
-                current_link = link
-                break
-        else:
-            raise Exception('No active link for source group')
-        matches = [
-            l for l in self._config.links
-            if l.source_group == source_group and (
-                activator is None
-                or activator in l.activators
-            )
-        ]
-        if not matches:
-            raise Exception('No matches')
-        if current_link in matches:
-            new_idx = (matches.index(current_link) + 1) % len(matches)
-        else:
-            new_idx = 0
-        new_link = matches[new_idx]
-        self._event_queue.put({'type': 'remove', 'object': current_link})
-        self._current_links[self._current_links.index(current_link)] = new_link
-        self._event_queue.put({'type': 'add', 'object': new_link})
+        with self._lock:
+            current_link = None
+            for link in self._current_links:
+                if link.source_group == source_group:
+                    current_link = link
+                    break
+            else:
+                raise Exception('No active link for source group')
+            matches = [
+                l for l in self._config.links
+                if l.source_group == source_group and (
+                    activator is None
+                    or activator in l.activators
+                )
+            ]
+            if not matches:
+                raise Exception('No matches')
+            if current_link in matches:
+                new_idx = (matches.index(current_link) + 1) % len(matches)
+            else:
+                new_idx = 0
+            new_link = matches[new_idx]
+            self._event_queue.put({'type': 'remove', 'object': current_link})
+            self._current_links[self._current_links.index(current_link)] = new_link
+            self._event_queue.put({'type': 'add', 'object': new_link})
 
     def _load_config(self) -> Config:
         with open(self._config_path) as f:

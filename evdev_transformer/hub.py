@@ -73,6 +73,7 @@ class Hub:
                             self._source_devices.remove(extra_device)
                         if source.name in self._activated_links:
                             del self._activated_links[source.name]
+                    matching_devices[-1].set_config_manager(self._config_manager)
                     if source.name not in self._activated_links:
                         self._activated_links[source.name] = destination.name
                         destination_device = self._get_destination_device(source, destination, matching_devices[-1])
@@ -96,7 +97,6 @@ class Hub:
             # TODO invalidate cache when updating matching config
             if source_name == source.name and destination_name == destination.name:
                 return destination_device
-        # TODO other destination types
         if isinstance(destination, UinputDestination):
             destination_device = UinputDestinationDevice.create(source_device)
         elif isinstance(destination, SubprocessDestination):

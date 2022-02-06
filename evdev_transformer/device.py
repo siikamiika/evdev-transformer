@@ -14,10 +14,15 @@ import functools
 
 import libevdev
 
+from .config import (
+    ConfigManager,
+)
+
 class SourceDevice:
     def __init__(self, device, identifier):
         self._device = device
         self._identifier = identifier
+        self._config_manager: Optional[ConfigManager] = None
         self._pressed_keys: Set[int] = set()
         self._abs_mt_tracking_ids_by_slot: Dict[int, int] = {}
         self._prev_slot: Optional[int] = None
@@ -52,6 +57,10 @@ class SourceDevice:
     @property
     def pressed_keys(self) -> Set[int]:
         return self._pressed_keys
+
+    def set_config_manager(self, config_manager: ConfigManager):
+        # TODO don't pass entire config manager
+        self._config_manager = config_manager
 
     def has_pressed_keys(self, keys: Iterable[int]) -> bool:
         if not isinstance(keys, set):
@@ -89,6 +98,11 @@ class SourceDevice:
         self,
         event: libevdev.InputEvent,
     ) -> Iterable[List[libevdev.InputEvent]]:
+        # TODO use config
+        if event.matches(libevdev.EV_KEY.BTN_LEFT):
+            if event.value == 1:
+                if self._config_manager is not None:
+                    self._config_manager.activate_next_link('🍎')
         # skip repeat
         if event.matches(libevdev.EV_KEY, 2):
             return
