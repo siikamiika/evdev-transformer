@@ -146,12 +146,18 @@ class Hub:
                     self._update_links()
 
     def _handle_ipc(self):
+        # TODO thread safe
         def _handle_events(events: Iterable[Dict]):
             events_iter = iter(events)
             first_event = next(events_iter)
             # TODO filter based on config
-            # TODO unique
             source_device = UnixSocketSourceDevice.from_ipc(first_event, events_iter)
+            for existing_device in self._source_devices:
+                if existing_device.identifier == source_device.identifier:
+                    # TODO this can leak memory
+                    existing_device.release()
+                    self._source_devices.remove(existing_device)
+                    break
             self._source_devices.append(source_device)
             self._update_links()
         for events in self._ipc_manager.events():
