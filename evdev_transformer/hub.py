@@ -65,14 +65,22 @@ class Hub:
                         continue
                     if self._activated_links.get(source.name) not in [None, destination.name]:
                         del self._activated_links[source.name]
-                        matching_devices[0].release()
+                        matching_devices[-1].release()
+                    if len(matching_devices) > 1:
+                        for extra_device in matching_devices[:-1]:
+                            # TODO this can still leak memory
+                            extra_device.release()
+                            self._source_devices.remove(extra_device)
+                        # TODO not necessarily the current
+                        if source.name in self._activated_links:
+                            del self._activated_links[source.name]
                     if source.name not in self._activated_links:
                         self._activated_links[source.name] = destination.name
-                        destination_device = self._get_destination_device(source, destination, matching_devices[0])
+                        destination_device = self._get_destination_device(source, destination, matching_devices[-1])
                         # TODO transforms
                         threading.Thread(
                             target=self._forward_events,
-                            args=(matching_devices[0], destination_device, [])
+                            args=(matching_devices[-1], destination_device, [])
                         ).start()
             for key in self._activated_links:
                 if key not in seen_sources:
@@ -152,12 +160,6 @@ class Hub:
             first_event = next(events_iter)
             # TODO filter based on config
             source_device = UnixSocketSourceDevice.from_ipc(first_event, events_iter)
-            for existing_device in self._source_devices:
-                if existing_device.identifier == source_device.identifier:
-                    # TODO this can leak memory
-                    existing_device.release()
-                    self._source_devices.remove(existing_device)
-                    break
             self._source_devices.append(source_device)
             self._update_links()
         for events in self._ipc_manager.events():
