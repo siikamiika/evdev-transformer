@@ -381,7 +381,7 @@ class SubprocessDestinationDevice(DestinationDevice):
                     self._handle = self._create_handle()
                     self._details_sent = False
             def _create_handle(self) -> subprocess.Popen:
-                # TODO two-way communication?
+                # TODO two-way communication? ACK etc
                 return subprocess.Popen(self._command, stdin=subprocess.PIPE, shell=True)
         return _SubprocessDevice(self._properties['command'], self._serialize())
 
