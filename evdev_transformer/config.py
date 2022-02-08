@@ -244,8 +244,8 @@ class Activator:
         self._properties = properties
         self._validate()
 
-    def __eq__(self, other):
-        self.to_dict() == other.to_dict()
+    def __eq__(self, other) -> bool:
+        return self.to_dict() == other.to_dict()
 
     @classmethod
     def from_dict(cls, data: Dict) -> Activator:
@@ -280,6 +280,14 @@ class HotkeyActivator(Activator):
         d['type'] = 'hotkey'
         return d
 
+    @property
+    def key(self) -> str:
+        return self._properties['hotkey']['key']
+
+    @property
+    def modifiers(self) -> List[str]:
+        return self._properties['hotkey']['modifiers']
+
     def _validate(self):
         super()._validate()
         assert isinstance(self._properties.get('hotkey'), dict)
@@ -290,8 +298,8 @@ class HotkeyActivator(Activator):
 class Link:
     def __init__(
         self,
-        source_group: SourceGroup,
-        destination: Destination,
+        source_group: str,
+        destination: str,
         activators: List[Activator],
     ):
         self._source_group = source_group
@@ -300,15 +308,15 @@ class Link:
         self._validate()
 
     @property
-    def source_group(self):
+    def source_group(self) -> str:
         return self._source_group
 
     @property
-    def destination(self):
+    def destination(self) -> str:
         return self._destination
 
     @property
-    def activators(self):
+    def activators(self) -> List[Activator]:
         return self._activators
 
     @classmethod

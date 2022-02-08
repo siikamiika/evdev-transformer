@@ -59,12 +59,32 @@
         {
             "source_group": "🍎",
             "destination": "es",
-            "activators": []
+            "activators": [
+                {
+                    "type": "hotkey",
+                    "properties": {
+                        "hotkey": {
+                            "key": "BTN_LEFT",
+                            "modifiers": []
+                        }
+                    }
+                }
+            ]
         },
         {
             "source_group": "🍎",
             "destination": "Master",
-            "activators": []
+            "activators": [
+                {
+                    "type": "hotkey",
+                    "properties": {
+                        "hotkey": {
+                            "key": "BTN_LEFT",
+                            "modifiers": []
+                        }
+                    }
+                }
+            ]
         },
         {
             "source_group": "Laptop (Remote)",

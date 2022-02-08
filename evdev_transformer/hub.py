@@ -6,6 +6,7 @@ from typing import (
     Iterable,
 )
 import time
+import functools
 
 import libevdev
 
@@ -73,7 +74,17 @@ class Hub:
                             self._source_devices.remove(extra_device)
                         if source.name in self._activated_links:
                             del self._activated_links[source.name]
-                    matching_devices[-1].set_config_manager(self._config_manager)
+                    matching_devices[-1].set_activators([
+                        (
+                            a,
+                            functools.partial(
+                                self._config_manager.activate_next_link,
+                                source_group=link.source_group,
+                                activator=a
+                            )
+                        )
+                        for a in link.activators
+                    ])
                     if source.name not in self._activated_links:
                         self._activated_links[source.name] = destination.name
                         destination_device = self._get_destination_device(source, destination, matching_devices[-1])
