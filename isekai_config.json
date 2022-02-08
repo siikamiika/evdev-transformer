@@ -15,6 +15,19 @@
             }
         },
         {
+            "name": "Logitech K400 Plus",
+            "type": "evdev_udev",
+            "transforms": [],
+            "properties": {
+                "udev": {
+                    "ID_VENDOR_ID": "046d",
+                    "ID_MODEL_ID": "c52b",
+                    "ID_INPUT_KEYBOARD": "1",
+                    "ID_INPUT_MOUSE": "1"
+                }
+            }
+        },
+        {
             "name": "Chromebook Touchpad (Remote)",
             "type": "evdev_unix_socket",
             "transforms": [],
@@ -29,7 +42,8 @@
         {
             "name": "🍎",
             "sources": [
-                "Apple Inc. Magic Trackpad 2"
+                "Apple Inc. Magic Trackpad 2",
+                "Logitech K400 Plus"
             ]
         },
         {
