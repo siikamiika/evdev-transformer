@@ -13,6 +13,7 @@ import subprocess
 import json
 import socket
 import functools
+import time
 
 import libevdev
 
@@ -372,7 +373,9 @@ class UinputDestinationDevice(DestinationDevice):
         # for p in self.properties:
         #     self.enable(p)
 
-        return device.create_uinput_device()
+        uinput_device = device.create_uinput_device()
+        time.sleep(0.5)
+        return uinput_device
 
 class SubprocessDestinationDevice(DestinationDevice):
     # TODO watchdog
