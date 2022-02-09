@@ -193,7 +193,9 @@ class EvdevSourceDevice(SourceDevice):
         if devname is None:
             raise Exception('DEVNAME is missing')
         fd = open(devname, 'rb')
-        return cls(libevdev.Device(fd), rule)
+        device = libevdev.Device(fd)
+        device.grab()
+        return cls(device, rule)
 
     @property
     def name(self) -> str:
@@ -222,10 +224,14 @@ class EvdevSourceDevice(SourceDevice):
         }
 
     def _release_device(self):
-        self._device.ungrab()
+        # TODO only release when forwarded to itself explicitly (unimplemented)
+        # self._device.ungrab()
+        return
 
     def _grab_device(self):
-        self._device.grab()
+        # see note for _release_device
+        # self._device.grab()
+        return
 
     def _events(self):
         while True:
