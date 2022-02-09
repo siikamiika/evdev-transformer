@@ -254,6 +254,9 @@ class UnixSocketSourceDevice(SourceDevice):
                 self._events = events
             def events(self):
                 for events in self._events:
+                    # device descriptor was resent
+                    if 'events' not in events:
+                        continue
                     for event in events['events']:
                         yield libevdev.InputEvent(
                             libevdev.evbit(event['type'], event['code']),
