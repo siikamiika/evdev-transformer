@@ -250,13 +250,7 @@ class Activator:
         return self.to_dict() == other.to_dict()
 
     def __hash__(self) -> int:
-        def _to_hashable(v):
-            if isinstance(v, dict):
-                return frozenset((k, _to_hashable(v2)) for k, v2 in v.items())
-            if isinstance(v, list):
-                return (_to_hashable(v2) for v2 in v)
-            return v
-        return hash(_to_hashable(self.to_dict()))
+        return id(self)
 
     @classmethod
     def from_dict(cls, data: Dict) -> Activator:
