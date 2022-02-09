@@ -12,13 +12,13 @@
             }
         },
         {
-            "name": "Logitech K400 Plus (Remote)",
+            "name": "JIS Keyboard (Remote)",
             "type": "evdev_unix_socket",
             "transforms": [],
             "properties": {
                 "host": "isekai",
-                "vendor": 1133,
-                "product": 16461
+                "vendor": 1241,
+                "product": 17733
             }
         }
     ],
@@ -27,7 +27,7 @@
             "name": "🌀🍎",
             "sources": [
                 "Apple Inc. Magic Trackpad 2 (Remote)",
-                "Logitech K400 Plus (Remote)"
+                "JIS Keyboard (Remote)"
             ]
         }
     ],

@@ -65,7 +65,7 @@ class SourceDevice:
     def set_activators(self, activators: List[Tuple[Activator, Callable]]):
         self._activators = activators
 
-    def has_pressed_keys(self, keys: Iterable[int]) -> bool:
+    def has_pressed_keys(self, keys: Iterable[libevdev.EventCode]) -> bool:
         if not isinstance(keys, set):
             keys = set(keys)
         return len(keys) == len(self._pressed_keys & keys)
@@ -105,8 +105,14 @@ class SourceDevice:
         if event.matches(libevdev.EV_KEY, 1):
             for activator, activate in self._activators:
                 if isinstance(activator, HotkeyActivator):
-                    # TODO modifiers
-                    if activator.key == event.code.name:
+                    if (
+                        activator.key == event.code.name
+                        and self.has_pressed_keys([
+                            # TODO resolve evbit in config?
+                            libevdev.evbit(c)
+                            for c in activator.modifiers
+                        ])
+                    ):
                         activate()
                         return
         # skip repeat

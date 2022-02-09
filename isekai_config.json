@@ -15,15 +15,14 @@
             }
         },
         {
-            "name": "Logitech K400 Plus",
+            "name": "JIS Keyboard",
             "type": "evdev_udev",
             "transforms": [],
             "properties": {
                 "udev": {
-                    "ID_VENDOR_ID": "046d",
-                    "ID_MODEL_ID": "c52b",
-                    "ID_INPUT_KEYBOARD": "1",
-                    "ID_INPUT_MOUSE": "1"
+                    "ID_VENDOR_ID": "04d9",
+                    "ID_MODEL_ID": "4545",
+                    "ID_INPUT_KEYBOARD": "1"
                 }
             }
         },
@@ -43,7 +42,7 @@
             "name": "🍎",
             "sources": [
                 "Apple Inc. Magic Trackpad 2",
-                "Logitech K400 Plus"
+                "JIS Keyboard"
             ]
         },
         {
@@ -78,8 +77,8 @@
                     "type": "hotkey",
                     "properties": {
                         "hotkey": {
-                            "key": "KEY_BACK",
-                            "modifiers": []
+                            "key": "KEY_TAB",
+                            "modifiers": ["KEY_LEFTMETA"]
                         }
                     }
                 }
@@ -93,8 +92,8 @@
                     "type": "hotkey",
                     "properties": {
                         "hotkey": {
-                            "key": "KEY_BACK",
-                            "modifiers": []
+                            "key": "KEY_TAB",
+                            "modifiers": ["KEY_LEFTMETA"]
                         }
                     }
                 }
