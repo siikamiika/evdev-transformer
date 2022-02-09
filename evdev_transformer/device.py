@@ -109,14 +109,7 @@ class SourceDevice:
         if event.matches(libevdev.EV_KEY, 1):
             for activator, activate in self._activators:
                 if isinstance(activator, HotkeyActivator):
-                    if (
-                        activator.key == event.code.name
-                        and self.has_pressed_keys([
-                            # TODO resolve evbit in config?
-                            libevdev.evbit(c)
-                            for c in activator.modifiers
-                        ])
-                    ):
+                    if activator.key == event.code and self.has_pressed_keys(activator.modifiers):
                         activate()
                         return
         # skip repeat

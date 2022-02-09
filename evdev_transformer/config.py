@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import (
     List,
+    Set,
     Tuple,
     Dict,
     Optional,
@@ -9,6 +10,7 @@ from typing import (
 import queue
 import json
 import threading
+import functools
 
 import libevdev
 
@@ -247,6 +249,15 @@ class Activator:
     def __eq__(self, other) -> bool:
         return self.to_dict() == other.to_dict()
 
+    def __hash__(self) -> int:
+        def _to_hashable(v):
+            if isinstance(v, dict):
+                return frozenset((k, _to_hashable(v2)) for k, v2 in v.items())
+            if isinstance(v, list):
+                return (_to_hashable(v2) for v2 in v)
+            return v
+        return hash(_to_hashable(self.to_dict()))
+
     @classmethod
     def from_dict(cls, data: Dict) -> Activator:
         cls_ = {
@@ -281,12 +292,14 @@ class HotkeyActivator(Activator):
         return d
 
     @property
-    def key(self) -> str:
-        return self._properties['hotkey']['key']
+    @functools.cache
+    def key(self) -> libevdev.EventCode:
+        return libevdev.evbit(self._properties['hotkey']['key'])
 
     @property
-    def modifiers(self) -> List[str]:
-        return self._properties['hotkey']['modifiers']
+    @functools.cache
+    def modifiers(self) -> Set[libevdev.EventCode]:
+        return {libevdev.evbit(c) for c in self._properties['hotkey']['modifiers']}
 
     def _validate(self):
         super()._validate()
