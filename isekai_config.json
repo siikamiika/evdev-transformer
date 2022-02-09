@@ -27,6 +27,16 @@
             }
         },
         {
+            "name": "Chromebook Keyboard (Remote)",
+            "type": "evdev_unix_socket",
+            "transforms": [],
+            "properties": {
+                "host": "sm-crarch",
+                "vendor": 1,
+                "product": 1
+            }
+        },
+        {
             "name": "Chromebook Touchpad (Remote)",
             "type": "evdev_unix_socket",
             "transforms": [],
@@ -48,7 +58,8 @@
         {
             "name": "Laptop (Remote)",
             "sources": [
-                "Chromebook Touchpad (Remote)"
+                "Chromebook Touchpad (Remote)",
+                "Chromebook Keyboard (Remote)"
             ]
         }
     ],

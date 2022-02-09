@@ -170,6 +170,7 @@ class Hub:
             first_event = next(events_iter)
             # TODO filter based on config
             source_device = UnixSocketSourceDevice.from_ipc(first_event, events_iter)
+            print('new ipc source device available', source_device)
             self._source_devices.append(source_device)
             self._update_links()
         for events in self._ipc_manager.events():
