@@ -78,7 +78,7 @@
                     "type": "hotkey",
                     "properties": {
                         "hotkey": {
-                            "key": "BTN_LEFT",
+                            "key": "KEY_BACK",
                             "modifiers": []
                         }
                     }
@@ -93,7 +93,7 @@
                     "type": "hotkey",
                     "properties": {
                         "hotkey": {
-                            "key": "BTN_LEFT",
+                            "key": "KEY_BACK",
                             "modifiers": []
                         }
                     }
