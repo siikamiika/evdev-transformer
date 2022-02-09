@@ -14,3 +14,4 @@
 - transforms should define evbits, absinfo, rep_value or inherit 1:1
     - fake vendor/product for generic devices?
 - logitech receiver (16461) vs keyboard/mouse (50475)
+    - choose unix socket source interactively
