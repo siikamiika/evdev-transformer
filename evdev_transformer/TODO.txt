@@ -18,3 +18,6 @@
 - logitech receiver (16461) vs keyboard/mouse (50475)
     - choose unix socket source interactively
 - don't release modifiers on switch for key activators
+- hardening
+    - documentation
+        - separate user
