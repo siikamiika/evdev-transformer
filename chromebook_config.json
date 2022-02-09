@@ -2,6 +2,16 @@
     "config_version": 1,
     "sources": [
         {
+            "name": "Keyboard",
+            "type": "evdev_udev",
+            "transforms": [],
+            "properties": {
+                "udev": {
+                    "ID_INPUT_KEYBOARD": "1"
+                }
+            }
+        },
+        {
             "name": "Touchpad",
             "type": "evdev_udev",
             "transforms": [],
@@ -16,11 +26,18 @@
         {
             "name": "Laptop Input",
             "sources": [
+                "Keyboard",
                 "Touchpad"
             ]
         }
     ],
     "destinations": [
+        {
+            "name": "Master",
+            "type": "uinput",
+            "transforms": [],
+            "properties": {}
+        },
         {
             "name": "isekai",
             "type": "subprocess",
@@ -33,8 +50,33 @@
     "links": [
         {
             "source_group": "Laptop Input",
+            "destination": "Master",
+            "activators": [
+                {
+                    "type": "hotkey",
+                    "properties": {
+                        "hotkey": {
+                            "key": "KEY_TAB",
+                            "modifiers": ["KEY_102ND"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "source_group": "Laptop Input",
             "destination": "isekai",
-            "activators": []
+            "activators": [
+                {
+                    "type": "hotkey",
+                    "properties": {
+                        "hotkey": {
+                            "key": "KEY_TAB",
+                            "modifiers": ["KEY_102ND"]
+                        }
+                    }
+                }
+            ]
         }
     ]
 }
