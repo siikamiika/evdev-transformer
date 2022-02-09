@@ -35,6 +35,9 @@ class SourceDevice:
         self._buffer: List[libevdev.InputEvent] = []
         self._lock = threading.Lock()
 
+    def __repr__(self) -> str:
+        return f'{type(self).__name__}(name="{self.name}")'
+
     @property
     def name(self) -> str:
         raise NotImplementedError('Override me')
@@ -332,6 +335,9 @@ class DestinationDevice:
         self._rep_value = rep_value
         self._properties = properties or {}
         self._device = self._create_device()
+
+    def __repr__(self) -> str:
+        return f'{type(self).__name__}(name="{self._name}")'
 
     @classmethod
     def create(
