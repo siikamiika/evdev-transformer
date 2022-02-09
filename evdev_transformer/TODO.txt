@@ -11,7 +11,9 @@
 - queue link switching
     - only allow one link in queue
     - don't queue current link
-- transforms should define evbits, absinfo, rep_value or inherit 1:1
+- transforms should define output evbits, absinfo, rep_value or inherit 1:1
     - fake vendor/product for generic devices?
+- transform input event type (EV_KEY, EV_REL), possibly also code
+    - limit performance impact
 - logitech receiver (16461) vs keyboard/mouse (50475)
     - choose unix socket source interactively
