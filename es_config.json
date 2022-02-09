@@ -2,13 +2,13 @@
     "config_version": 1,
     "sources": [
         {
-            "name": "Apple Inc. Magic Trackpad 2 (Remote)",
+            "name": "Logitech K400 Plus (Remote)",
             "type": "evdev_unix_socket",
             "transforms": [],
             "properties": {
                 "host": "isekai",
-                "vendor": 1452,
-                "product": 613
+                "vendor": 1133,
+                "product": 16461
             }
         }
     ],
@@ -16,7 +16,7 @@
         {
             "name": "🌀🍎",
             "sources": [
-                "Apple Inc. Magic Trackpad 2 (Remote)"
+                "Logitech K400 Plus (Remote)"
             ]
         }
     ],
