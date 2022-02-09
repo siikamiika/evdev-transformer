@@ -386,32 +386,40 @@ class SubprocessDestinationDevice(DestinationDevice):
                 self._details_sent = False
             def send_events(self, events: List[libevdev.InputEvent]):
                 if not self._details_sent:
-                    self._send_details()
+                    self._send_data(self._get_details_data())
+                    self._details_sent = True
                 self._send_data(json.dumps({
                     'events': [
                         {'type': e.type.value, 'code': e.code.value, 'value': e.value}
                         for e in events
                     ]
                 }).encode('utf-8'))
-            def _send_details(self):
-                data = json.dumps({
+            def _get_details_data(self) -> bytes:
+                return json.dumps({
                     'host': self._host,
                     'vendor': self._details['id']['vendor'],
                     'product': self._details['id']['product'],
                     'data': self._details,
                 }).encode('utf-8')
-                self._send_data(data)
-                self._details_sent = True
             def _send_data(self, data: bytes):
                 try:
-                    if self._handle.stdin is None:
-                        raise AttributeError
-                    self._handle.stdin.write(data + b'\n')
-                    self._handle.stdin.flush()
+                    self._send_data_raw(data)
                 except (BrokenPipeError, AttributeError):
+                    self._details_sent = False
                     print('Created new handle')
                     self._handle = self._create_handle()
-                    self._details_sent = False
+                    try:
+                        self._send_data_raw(self._get_details_data())
+                        self._details_sent = True
+                        self._send_data_raw(data)
+                    except:
+                        pass
+            def _send_data_raw(self, data: bytes):
+                if self._handle.stdin is None:
+                    raise AttributeError
+                self._handle.stdin.write(data + b'\n')
+                self._handle.stdin.flush()
+
             def _create_handle(self) -> subprocess.Popen:
                 # TODO two-way communication? ACK etc
                 return subprocess.Popen(self._command, stdin=subprocess.PIPE, shell=True)
