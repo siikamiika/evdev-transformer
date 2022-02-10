@@ -85,8 +85,6 @@ class SourceDevice:
                 self._grab_device()
                 yield from self._init_attached_device()
                 for events in self._events():
-                    print(events)
-                    # print(self._event_loop_stopped, self._pressed_keys, self._abs_mt_tracking_ids_by_slot)
                     if self._event_loop_stopped:
                         yield from self._cleanup_released_device()
                         break
@@ -109,7 +107,6 @@ class SourceDevice:
         event: libevdev.InputEvent,
     ) -> Iterable[List[libevdev.InputEvent]]:
         if event.matches(libevdev.EV_KEY.BTN_TOUCH, 1):
-            print(event)
             global repeated
             now = time.time()
             repeated.append(now)
