@@ -41,6 +41,7 @@ class Hub:
         self._source_devices: List[SourceDevice] = []
         self._link_destination_device_cache: List[Tuple[str, str, DestinationDevice]] = []
         self._activated_links: Dict[str, str] = {}
+        self._source_device_destination_device_pairs: List[Tuple[SourceDevice, DestinationDevice]] = []
         self._lock = threading.Lock()
 
     def start(self):
@@ -88,11 +89,11 @@ class Hub:
                     if source.name not in self._activated_links:
                         self._activated_links[source.name] = destination.name
                         destination_device = self._get_destination_device(source, destination, matching_devices[-1])
-                        # TODO transforms
-                        threading.Thread(
-                            target=self._forward_events,
-                            args=(matching_devices[-1], destination_device, [])
-                        ).start()
+                        for src, dst in self._source_device_destination_device_pairs:
+                            if src is matching_devices[-1]:
+                                self._source_device_destination_device_pairs.remove((src, dst))
+                                break
+                        self._source_device_destination_device_pairs.append((matching_devices[-1], destination_device))
             for key in self._activated_links:
                 if key not in seen_sources:
                     del self._activated_links[key]
@@ -117,22 +118,27 @@ class Hub:
         self._link_destination_device_cache.append((source.name, destination.name, destination_device))
         return destination_device
 
-    def _forward_events(
-        self,
-        source_device: SourceDevice,
-        destination_device: DestinationDevice,
-        transforms,
-    ):
-        print('forward', source_device, destination_device, transforms)
-        # TODO transforms
-        for events in source_device.events():
-            destination_device.send_events(events)
+    def _forward_events(self, source_device: SourceDevice):
+        while True:
+            destination_device = None
+            for src, dst in self._source_device_destination_device_pairs:
+                if src is source_device:
+                    destination_device = dst
+                    break
+            if destination_device is not None:
+                print('forward', source_device, destination_device)
+                # TODO transforms
+                for events in source_device.events():
+                    destination_device.send_events(events)
+            else:
+                time.sleep(1)
 
     def _monitor_devices(self):
         for action, udev_device, rule in self._device_monitor.events():
             print(action, udev_device, rule)
             if action == 'add':
                 source_device = EvdevSourceDevice.from_udev(udev_device, rule)
+                threading.Thread(target=self._forward_events, args=(source_device,)).start()
                 self._source_devices.append(source_device)
                 self._update_links()
             elif action == 'remove':
@@ -170,6 +176,7 @@ class Hub:
             first_event = next(events_iter)
             # TODO filter based on config
             source_device = UnixSocketSourceDevice.from_ipc(first_event, events_iter)
+            threading.Thread(target=self._forward_events, args=(source_device,)).start()
             print('new ipc source device available', source_device)
             self._source_devices.append(source_device)
             self._update_links()
