@@ -171,6 +171,7 @@ class Hub:
             first_event = next(events_iter)
             # TODO filter based on config
             source_device = UnixSocketSourceDevice.from_ipc(first_event, events_iter)
+            # TODO stop existing thread
             threading.Thread(target=self._forward_events, args=(source_device,)).start()
             print('new ipc source device available', source_device)
             self._source_devices.append(source_device)
