@@ -119,7 +119,6 @@ class SourceDevice:
                     activate()
                     break
                 repeated = []
-                return
         # TODO script activators
         if event.matches(libevdev.EV_KEY, 1):
             for activator, activate in self._activators:
