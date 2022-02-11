@@ -21,6 +21,3 @@
 - hardening
     - documentation
         - separate user
-- fix infinite loop when source disconnects
-    - break out of while loop when the same source appears twice?
-    - SourceDevice.is_disconnected?

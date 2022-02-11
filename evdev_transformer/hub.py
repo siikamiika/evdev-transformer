@@ -123,7 +123,13 @@ class Hub:
             if destination_device is not None:
                 print('forward', source_device, destination_device)
                 # TODO transforms
-                for events in source_device.events():
+                events_iter = iter(source_device.events())
+                try:
+                    first_events = next(events_iter)
+                    destination_device.send_events(first_events)
+                except StopIteration:
+                    break
+                for events in events_iter:
                     destination_device.send_events(events)
             else:
                 time.sleep(1)
