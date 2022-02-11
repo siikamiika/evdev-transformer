@@ -61,7 +61,7 @@ class SourceDevice:
         raise NotImplementedError('Override me')
 
     @property
-    def device_properties(self) -> List[libevdev.InputProperty]:
+    def input_properties(self) -> List[libevdev.InputProperty]:
         raise NotImplementedError('Override me')
 
     @property
@@ -236,7 +236,7 @@ class EvdevSourceDevice(SourceDevice):
         }
 
     @property
-    def device_properties(self) -> List[libevdev.InputProperty]:
+    def input_properties(self) -> List[libevdev.InputProperty]:
         return self._device.properties
 
     def _release_device(self):
@@ -325,7 +325,7 @@ class UnixSocketSourceDevice(SourceDevice):
 
     @property
     @functools.cache
-    def device_properties(self) -> List[libevdev.InputProperty]:
+    def input_properties(self) -> List[libevdev.InputProperty]:
         return [libevdev.propbit(p) for p in self._device.details['properties']]
 
     def _release_device(self):
@@ -346,7 +346,7 @@ class DestinationDevice:
         evbits: Dict[libevdev.EventType, List[libevdev.EventCode]],
         absinfo: Dict[libevdev.EventCode, libevdev.InputAbsInfo],
         rep_value: Dict[libevdev.EventCode, int],
-        device_properties: List[libevdev.InputProperty],
+        input_properties: List[libevdev.InputProperty],
         properties: Optional[Dict],
     ):
         self._name = name
@@ -354,7 +354,7 @@ class DestinationDevice:
         self._evbits = evbits
         self._absinfo = absinfo
         self._rep_value = rep_value
-        self._device_properties = device_properties
+        self._input_properties = input_properties
         self._properties = properties or {}
         self._device = self._create_device()
 
@@ -373,7 +373,7 @@ class DestinationDevice:
             source_device.evbits,
             source_device.absinfo,
             source_device.rep_value,
-            source_device.device_properties,
+            source_device.input_properties,
             properties,
         )
 
@@ -398,7 +398,7 @@ class UinputDestinationDevice(DestinationDevice):
                     data = None
                 device.enable(evbit, data)
 
-        for p in self._device_properties:
+        for p in self._input_properties:
             device.enable(p)
 
         uinput_device = device.create_uinput_device()
@@ -481,7 +481,7 @@ class SubprocessDestinationDevice(DestinationDevice):
                 c.value: v
                 for c, v in self._rep_value.items()
             },
-            'properties': [p.value for p in self._device_properties],
+            'properties': [p.value for p in self._input_properties],
         }
 
 class HidGadgetDestinationDevice(DestinationDevice):
