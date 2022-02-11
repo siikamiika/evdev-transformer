@@ -383,6 +383,34 @@ class DestinationDevice:
     def _create_device(self):
         raise NotImplementedError('Override me')
 
+    def _serialize(self) -> Dict:
+        return {
+            'type': type(self).__name__,
+            'name': self._name,
+            'id': self._id,
+            'evbits': {
+                t.value: [sc.value for sc in c]
+                for t, c
+                in self._evbits.items()
+            },
+            'absinfo': {
+                c.value: {
+                    'minimum': ai.minimum,
+                    'maximum': ai.maximum,
+                    'fuzz': ai.fuzz,
+                    'flat': ai.flat,
+                    'resolution': ai.resolution,
+                    'value': ai.value,
+                }
+                for c, ai in self._absinfo.items()
+            },
+            'rep_value': {
+                c.value: v
+                for c, v in self._rep_value.items()
+            },
+            'properties': [p.value for p in self._input_properties],
+        }
+
 class UinputDestinationDevice(DestinationDevice):
     def _create_device(self) -> libevdev.device.UinputDevice:
         device = libevdev.Device()
@@ -455,34 +483,6 @@ class SubprocessDestinationDevice(DestinationDevice):
                 # TODO two-way communication? ACK etc
                 return subprocess.Popen(self._command, stdin=subprocess.PIPE, shell=True)
         return _SubprocessDevice(self._properties['command'], self._serialize())
-
-    def _serialize(self) -> Dict:
-        return {
-            'type': type(self).__name__,
-            'name': self._name,
-            'id': self._id,
-            'evbits': {
-                t.value: [sc.value for sc in c]
-                for t, c
-                in self._evbits.items()
-            },
-            'absinfo': {
-                c.value: {
-                    'minimum': ai.minimum,
-                    'maximum': ai.maximum,
-                    'fuzz': ai.fuzz,
-                    'flat': ai.flat,
-                    'resolution': ai.resolution,
-                    'value': ai.value,
-                }
-                for c, ai in self._absinfo.items()
-            },
-            'rep_value': {
-                c.value: v
-                for c, v in self._rep_value.items()
-            },
-            'properties': [p.value for p in self._input_properties],
-        }
 
 class HidGadgetDestinationDevice(DestinationDevice):
     # TODO
