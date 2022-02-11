@@ -116,10 +116,11 @@ class Hub:
     def _forward_events(self, source_device: SourceDevice):
         while True:
             destination_device = None
-            for src, dst in self._source_device_destination_device_pairs:
-                if src is source_device:
-                    destination_device = dst
-                    break
+            with self._lock:
+                for src, dst in self._source_device_destination_device_pairs:
+                    if src is source_device:
+                        destination_device = dst
+                        break
             if destination_device is not None:
                 print('forward', source_device, destination_device)
                 # TODO transforms
