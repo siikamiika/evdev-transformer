@@ -61,6 +61,10 @@ class SourceDevice:
         raise NotImplementedError('Override me')
 
     @property
+    def device_properties(self) -> List[libevdev.InputProperty]:
+        raise NotImplementedError('Override me')
+
+    @property
     def identifier(self):
         return self._identifier
 
@@ -231,6 +235,10 @@ class EvdevSourceDevice(SourceDevice):
             for c in self._device.evbits.get(libevdev.EV_REP, [])
         }
 
+    @property
+    def device_properties(self) -> List[libevdev.InputProperty]:
+        return self._device.properties
+
     def _release_device(self):
         # TODO only release when forwarded to itself explicitly (unimplemented)
         # self._device.ungrab()
@@ -315,6 +323,11 @@ class UnixSocketSourceDevice(SourceDevice):
             for c, v in self._device.details['rep_value'].items()
         }
 
+    @property
+    @functools.cache
+    def device_properties(self) -> List[libevdev.InputProperty]:
+        return [libevdev.propbit(p) for p in self._device.details['properties']]
+
     def _release_device(self):
         return
 
@@ -333,6 +346,7 @@ class DestinationDevice:
         evbits: Dict[libevdev.EventType, List[libevdev.EventCode]],
         absinfo: Dict[libevdev.EventCode, libevdev.InputAbsInfo],
         rep_value: Dict[libevdev.EventCode, int],
+        device_properties: List[libevdev.InputProperty],
         properties: Optional[Dict],
     ):
         self._name = name
@@ -340,6 +354,7 @@ class DestinationDevice:
         self._evbits = evbits
         self._absinfo = absinfo
         self._rep_value = rep_value
+        self._device_properties = device_properties
         self._properties = properties or {}
         self._device = self._create_device()
 
@@ -358,6 +373,7 @@ class DestinationDevice:
             source_device.evbits,
             source_device.absinfo,
             source_device.rep_value,
+            source_device.device_properties,
             properties,
         )
 
@@ -382,9 +398,8 @@ class UinputDestinationDevice(DestinationDevice):
                     data = None
                 device.enable(evbit, data)
 
-        # TODO is this a bug in libevdev
-        # for p in self.properties:
-        #     self.enable(p)
+        for p in self._device_properties:
+            device.enable(p)
 
         uinput_device = device.create_uinput_device()
         time.sleep(0.5)
@@ -466,6 +481,7 @@ class SubprocessDestinationDevice(DestinationDevice):
                 c.value: v
                 for c, v in self._rep_value.items()
             },
+            'properties': [p.value for p in self._device_properties],
         }
 
 class HidGadgetDestinationDevice(DestinationDevice):
