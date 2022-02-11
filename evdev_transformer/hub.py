@@ -5,7 +5,6 @@ from typing import (
     Tuple,
     Iterable,
 )
-import time
 import functools
 
 import libevdev
@@ -132,8 +131,6 @@ class Hub:
                     break
                 for events in events_iter:
                     destination_device.send_events(events)
-            else:
-                time.sleep(1)
 
     def _monitor_devices(self):
         for action, udev_device, rule in self._device_monitor.events():
