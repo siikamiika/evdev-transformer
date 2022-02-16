@@ -110,16 +110,16 @@ class SourceDevice:
         self,
         event: libevdev.InputEvent,
     ) -> Iterable[List[libevdev.InputEvent]]:
-        if event.matches(libevdev.EV_KEY.BTN_TOUCH, 1):
-            global repeated
-            now = time.time()
-            repeated.append(now)
-            repeated = [t for t in repeated if t > now - 0.18]
-            if len(repeated) >= 2:
-                for activator, activate in self._activators:
-                    activate()
-                    break
-                repeated = []
+        # if event.matches(libevdev.EV_KEY.BTN_TOUCH, 1):
+        #     global repeated
+        #     now = time.time()
+        #     repeated.append(now)
+        #     repeated = [t for t in repeated if t > now - 0.18]
+        #     if len(repeated) >= 2:
+        #         for activator, activate in self._activators:
+        #             activate()
+        #             break
+        #         repeated = []
         # TODO script activators
         if event.matches(libevdev.EV_KEY, 1):
             for activator, activate in self._activators:
