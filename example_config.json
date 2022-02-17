@@ -8,16 +8,15 @@
                 {
                     "type": "key_remap",
                     "properties": {
-                        "remaps": [
-                            {
-                                "source": "KEY_CAPSLOCK",
-                                "destination": "KEY_ESC"
-                            },
-                            {
-                                "source": "KEY_RIGHTCTRL",
-                                "destination": "KEY_BACKSPACE"
-                            }
-                        ]
+                        "source": "KEY_CAPSLOCK",
+                        "destination": "KEY_ESC"
+                    }
+                },
+                {
+                    "type": "key_remap",
+                    "properties": {
+                        "source": "KEY_RIGHTCTRL",
+                        "destination": "KEY_BACKSPACE"
                     }
                 },
                 {

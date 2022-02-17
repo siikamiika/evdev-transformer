@@ -17,7 +17,15 @@
         {
             "name": "JIS Keyboard",
             "type": "evdev_udev",
-            "transforms": [],
+            "transforms": [
+                {
+                    "type": "key_remap",
+                    "properties": {
+                        "source": "KEY_HENKAN",
+                        "destination": "KEY_RIGHTALT"
+                    }
+                }
+            ],
             "properties": {
                 "udev": {
                     "ID_VENDOR_ID": "04d9",

@@ -21,6 +21,9 @@ from .config import (
     ConfigManager,
     Activator,
     HotkeyActivator,
+    Transform,
+    KeyRemapTransform,
+    ScriptTransform,
 )
 
 repeated = []
@@ -30,6 +33,7 @@ class SourceDevice:
         self._device = device
         self._identifier = identifier
         self._activators: List[Tuple[Activator, Callable]] = []
+        self._transforms: List[Transform] = []
         self._pressed_keys: Set[int] = set()
         self._abs_mt_tracking_ids_by_slot: Dict[int, int] = {}
         self._prev_slot: Optional[int] = None
@@ -74,6 +78,9 @@ class SourceDevice:
 
     def set_activators(self, activators: List[Tuple[Activator, Callable]]):
         self._activators = activators
+
+    def set_transforms(self, transforms: List[Transform]):
+        self._transforms = transforms
 
     def has_pressed_keys(self, keys: Iterable[libevdev.EventCode]) -> bool:
         if not isinstance(keys, set):
@@ -120,6 +127,12 @@ class SourceDevice:
         #             activate()
         #             break
         #         repeated = []
+        for transform in self._transforms:
+            if isinstance(transform, KeyRemapTransform):
+                if event.matches(libevdev.evbit(transform.source)):
+                    event = libevdev.InputEvent(libevdev.evbit(transform.destination), event.value)
+            elif isinstance(transform, ScriptTransform):
+                raise NotImplementedError
         # TODO script activators
         if event.matches(libevdev.EV_KEY, 1):
             for activator, activate in self._activators:

@@ -69,6 +69,7 @@ class Hub:
                             self._source_devices.remove(extra_device)
                         if source.name in self._activated_links:
                             del self._activated_links[source.name]
+                    # update device config
                     matching_devices[-1].set_activators([
                         (
                             a,
@@ -80,6 +81,8 @@ class Hub:
                         )
                         for a in link.activators
                     ])
+                    matching_devices[-1].set_transforms(source.transforms)
+                    # activate current link and clean up old
                     if source.name not in self._activated_links:
                         self._activated_links[source.name] = destination.name
                         destination_device = self._get_destination_device(source, destination, matching_devices[-1])

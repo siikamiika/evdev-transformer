@@ -44,9 +44,17 @@ class KeyRemapTransform(Transform):
         d['type'] = 'key_remap'
         return d
 
+    @property
+    def source(self) -> str:
+        return self._properties['source']
+
+    @property
+    def destination(self) -> str:
+        return self._properties['destination']
+
     def _validate(self):
-        assert isinstance(self._properties.get('remaps'), list)
-        assert all(bool(libevdev.evbit(m.get(k))) for k in ['source', 'destination'] for m in self._properties['remaps'])
+        assert bool(libevdev.evbit(self._properties.get('source')))
+        assert bool(libevdev.evbit(self._properties.get('destination')))
 
 class ScriptTransform(Transform):
     def to_dict(self) -> Dict:
@@ -73,6 +81,10 @@ class Source:
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def transforms(self) -> List[Transform]:
+        return self._transforms
 
     @property
     def identifier(self) -> Dict:
