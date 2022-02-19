@@ -18,22 +18,19 @@ import time
 import libevdev
 
 from .config import (
-    ConfigManager,
     Activator,
     HotkeyActivator,
-    Transform,
-    KeyRemapTransform,
-    ScriptTransform,
 )
-
-repeated = []
+from .transform import (
+    EventTransform,
+)
 
 class SourceDevice:
     def __init__(self, device, identifier):
         self._device = device
         self._identifier = identifier
         self._activators: List[Tuple[Activator, Callable]] = []
-        self._transforms: List[Transform] = []
+        self._transforms: List[EventTransform] = []
         self._pressed_keys: Set[int] = set()
         self._abs_mt_tracking_ids_by_slot: Dict[int, int] = {}
         self._prev_slot: Optional[int] = None
@@ -79,7 +76,7 @@ class SourceDevice:
     def set_activators(self, activators: List[Tuple[Activator, Callable]]):
         self._activators = activators
 
-    def set_transforms(self, transforms: List[Transform]):
+    def set_transforms(self, transforms: List[EventTransform]):
         self._transforms = transforms
 
     def has_pressed_keys(self, keys: Iterable[libevdev.EventCode]) -> bool:
@@ -112,27 +109,31 @@ class SourceDevice:
     def _events(self):
         raise NotImplementedError('Override me')
 
-    # TODO group by event type
+    def _transform_event(self, event: libevdev.InputEvent) -> Iterable[libevdev.InputEvent]:
+        buffer = [event]
+        for transform in self._transforms:
+            transformed_buffer = []
+            for intermediate_event in buffer:
+                if transform.matches_event(intermediate_event):
+                    for transformed_event in transform.transform_event(intermediate_event):
+                        transformed_buffer.append(transformed_event)
+                else:
+                    transformed_buffer.append(intermediate_event)
+            buffer = transformed_buffer
+        yield from buffer
+
     def _handle_event(
         self,
         event: libevdev.InputEvent,
     ) -> Iterable[List[libevdev.InputEvent]]:
-        # if event.matches(libevdev.EV_KEY.BTN_TOUCH, 1):
-        #     global repeated
-        #     now = time.time()
-        #     repeated.append(now)
-        #     repeated = [t for t in repeated if t > now - 0.18]
-        #     if len(repeated) >= 2:
-        #         for activator, activate in self._activators:
-        #             activate()
-        #             break
-        #         repeated = []
-        for transform in self._transforms:
-            if isinstance(transform, KeyRemapTransform):
-                if event.matches(libevdev.evbit(transform.source)):
-                    event = libevdev.InputEvent(libevdev.evbit(transform.destination), event.value)
-            elif isinstance(transform, ScriptTransform):
-                raise NotImplementedError
+        for transformed_event in self._transform_event(event):
+            yield from self._handle_event2(transformed_event)
+
+    # TODO group by event type
+    def _handle_event2(
+        self,
+        event: libevdev.InputEvent,
+    ) -> Iterable[List[libevdev.InputEvent]]:
         # TODO script activators
         if event.matches(libevdev.EV_KEY, 1):
             for activator, activate in self._activators:

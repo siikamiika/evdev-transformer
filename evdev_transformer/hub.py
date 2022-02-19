@@ -30,6 +30,9 @@ from .device import (
     UinputDestinationDevice,
     SubprocessDestinationDevice,
 )
+from .transform import (
+    EventTransform,
+)
 from .ipc import IpcManager
 
 class Hub:
@@ -81,7 +84,7 @@ class Hub:
                         )
                         for a in link.activators
                     ])
-                    matching_devices[-1].set_transforms(source.transforms)
+                    matching_devices[-1].set_transforms([EventTransform.from_config(t) for t in source.transforms])
                     # activate current link and clean up old
                     if source.name not in self._activated_links:
                         self._activated_links[source.name] = destination.name
