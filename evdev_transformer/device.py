@@ -129,43 +129,43 @@ class SourceDevice:
         for transformed_event in self._transform_event(event):
             yield from self._handle_event2(transformed_event)
 
-    # TODO group by event type
     def _handle_event2(
         self,
         event: libevdev.InputEvent,
     ) -> Iterable[List[libevdev.InputEvent]]:
-        # TODO script activators
-        if event.matches(libevdev.EV_KEY, 1):
-            for activator, activate in self._activators:
-                if isinstance(activator, HotkeyActivator):
-                    if activator.key == event.code and self.has_pressed_keys(activator.modifiers):
-                        activate()
-                        return
-        # skip repeat
-        if event.matches(libevdev.EV_KEY, 2):
-            return
-        # update key state
-        if event.matches(libevdev.EV_KEY):
+        if event.type == libevdev.EV_KEY:
+            # release key
             if event.value == 0:
                 self._pressed_keys -= {event.code}
+            # press key
             elif event.value == 1:
                 self._pressed_keys |= {event.code}
-        # https://www.kernel.org/doc/Documentation/input/multi-touch-protocol.txt
-        if event.matches(libevdev.EV_ABS.ABS_MT_SLOT):
-            self._prev_slot = event.value
-        elif event.matches(libevdev.EV_ABS.ABS_MT_TRACKING_ID):
-            if self._prev_slot is None:
-                for slot in self._abs_mt_tracking_ids_by_slot:
-                    self._prev_slot = slot
-                    break
-            if self._prev_slot:
-                if event.value == -1:
-                    try:
-                        del self._abs_mt_tracking_ids_by_slot[self._prev_slot]
-                    except KeyError:
-                        pass
-                else:
-                    self._abs_mt_tracking_ids_by_slot[self._prev_slot] = event.value
+                # TODO script activators
+                for activator, activate in self._activators:
+                    if isinstance(activator, HotkeyActivator):
+                        if activator.key == event.code and self.has_pressed_keys(activator.modifiers):
+                            activate()
+                            return
+            # skip repeat
+            elif event.value == 2:
+                return
+        elif event.type == libevdev.EV_ABS:
+            # https://www.kernel.org/doc/Documentation/input/multi-touch-protocol.txt
+            if event.code == libevdev.EV_ABS.ABS_MT_SLOT:
+                self._prev_slot = event.value
+            elif event.code == libevdev.EV_ABS.ABS_MT_TRACKING_ID:
+                if self._prev_slot is None:
+                    for slot in self._abs_mt_tracking_ids_by_slot:
+                        self._prev_slot = slot
+                        break
+                if self._prev_slot:
+                    if event.value == -1:
+                        try:
+                            del self._abs_mt_tracking_ids_by_slot[self._prev_slot]
+                        except KeyError:
+                            pass
+                    else:
+                        self._abs_mt_tracking_ids_by_slot[self._prev_slot] = event.value
         # handle buffer
         self._buffer.append(event)
         if event.matches(libevdev.EV_SYN.SYN_REPORT):
