@@ -21,15 +21,10 @@
                 {
                     "type": "key_remap",
                     "properties": {
-                        "source": "KEY_HENKAN",
-                        "destination": "KEY_RIGHTALT"
-                    }
-                },
-                {
-                    "type": "key_remap",
-                    "properties": {
-                        "source": "KEY_KATAKANAHIRAGANA",
-                        "destination": "KEY_BACKSPACE"
+                        "mapping": {
+                            "KEY_HENKAN": "KEY_RIGHTALT",
+                            "KEY_KATAKANAHIRAGANA": "KEY_BACKSPACE"
+                        }
                     }
                 }
             ],

@@ -4,7 +4,17 @@
         {
             "name": "Keyboard",
             "type": "evdev_udev",
-            "transforms": [],
+            "transforms": [
+                {
+                    "type": "key_remap",
+                    "properties": {
+                        "mapping": {
+                            "KEY_102ND": "KEY_LEFTMETA",
+                            "KEY_LEFTMETA": "KEY_CAPSLOCK"
+                        }
+                    }
+                }
+            ],
             "properties": {
                 "udev": {
                     "ID_INPUT_KEYBOARD": "1"
@@ -57,7 +67,7 @@
                     "properties": {
                         "hotkey": {
                             "key": "KEY_TAB",
-                            "modifiers": ["KEY_102ND"]
+                            "modifiers": ["KEY_LEFTMETA"]
                         }
                     }
                 }
@@ -72,7 +82,7 @@
                     "properties": {
                         "hotkey": {
                             "key": "KEY_TAB",
-                            "modifiers": ["KEY_102ND"]
+                            "modifiers": ["KEY_LEFTMETA"]
                         }
                     }
                 }

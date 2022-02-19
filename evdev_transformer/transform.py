@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import (
-    List,
+    Set,
     Callable,
     Iterable,
 )
@@ -16,9 +16,9 @@ from .config import (
 class EventTransform:
     def __init__(
         self,
-        input_codes: List[libevdev.EventCode],
+        input_codes: Set[libevdev.EventCode],
         # TODO use output_codes to extend destination device codes
-        output_codes: List[libevdev.EventCode],
+        output_codes: Set[libevdev.EventCode],
         transform_event_fn: Callable[[libevdev.InputEvent], Iterable[libevdev.InputEvent]],
     ):
         self._input_codes = input_codes
@@ -40,10 +40,15 @@ class EventTransform:
 class KeyRemapEventTransform(EventTransform):
     @classmethod
     def from_config(cls, transform_config: KeyRemapTransform) -> KeyRemapEventTransform:
-        # TODO make KeyRemapTransform config support multiple mappings again
-        input_codes = [libevdev.evbit(transform_config.source)]
-        output_codes = [libevdev.evbit(transform_config.destination)]
-        event_map = {input_codes[0]: output_codes[0]}
+        input_codes = set()
+        output_codes = set()
+        event_map = {}
+        for source, destination in transform_config.mapping.items():
+            source_code = libevdev.evbit(source)
+            destination_code = libevdev.evbit(destination)
+            input_codes.add(source_code)
+            output_codes.add(destination_code)
+            event_map[source_code] = destination_code
         def _transform_event(event: libevdev.InputEvent) -> Iterable[libevdev.InputEvent]:
             yield libevdev.InputEvent(event_map[event.code], event.value)
         return cls(input_codes, output_codes, _transform_event)

@@ -45,16 +45,14 @@ class KeyRemapTransform(Transform):
         return d
 
     @property
-    def source(self) -> str:
-        return self._properties['source']
-
-    @property
-    def destination(self) -> str:
-        return self._properties['destination']
+    def mapping(self) -> Dict[str, str]:
+        return self._properties['mapping']
 
     def _validate(self):
-        assert bool(libevdev.evbit(self._properties.get('source')))
-        assert bool(libevdev.evbit(self._properties.get('destination')))
+        assert isinstance(self._properties.get('mapping'), dict)
+        for k, v in self._properties['mapping'].items():
+            assert bool(libevdev.evbit(k))
+            assert bool(libevdev.evbit(v))
 
 class ScriptTransform(Transform):
     def to_dict(self) -> Dict:
