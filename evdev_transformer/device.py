@@ -19,17 +19,19 @@ import libevdev
 
 from .config import (
     Activator,
-    HotkeyActivator,
 )
 from .transform import (
     EventTransform,
+)
+from .activator import (
+    DeviceLinkActivator,
 )
 
 class SourceDevice:
     def __init__(self, device, identifier):
         self._device = device
         self._identifier = identifier
-        self._activators: List[Tuple[Activator, Callable]] = []
+        self._activators: List[DeviceLinkActivator] = []
         self._transforms: List[EventTransform] = []
         self._pressed_keys: Set[int] = set()
         self._abs_mt_tracking_ids_by_slot: Dict[int, int] = {}
@@ -74,7 +76,10 @@ class SourceDevice:
         return self._pressed_keys
 
     def set_activators(self, activators: List[Tuple[Activator, Callable]]):
-        self._activators = activators
+        self._activators = [
+            DeviceLinkActivator.create(activator, self.has_pressed_keys, activate)
+            for activator, activate in activators
+        ]
 
     def set_transforms(self, transforms: List[EventTransform]):
         self._transforms = transforms
@@ -127,7 +132,12 @@ class SourceDevice:
         event: libevdev.InputEvent,
     ) -> Iterable[List[libevdev.InputEvent]]:
         for transformed_event in self._transform_event(event):
-            yield from self._handle_event2(transformed_event)
+            for activator in self._activators:
+                if activator.matches_event(transformed_event):
+                    activator.activate()
+                    break
+            else:
+                yield from self._handle_event2(transformed_event)
 
     def _handle_event2(
         self,
@@ -140,12 +150,6 @@ class SourceDevice:
             # press key
             elif event.value == 1:
                 self._pressed_keys |= {event.code}
-                # TODO script activators
-                for activator, activate in self._activators:
-                    if isinstance(activator, HotkeyActivator):
-                        if activator.key == event.code and self.has_pressed_keys(activator.modifiers):
-                            activate()
-                            return
             # skip repeat
             elif event.value == 2:
                 return
