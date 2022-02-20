@@ -6,6 +6,7 @@ from typing import (
     Iterable,
 )
 import functools
+import logging
 
 import libevdev
 
@@ -34,6 +35,7 @@ from .transform import (
     EventTransform,
 )
 from .ipc import IpcManager
+from . import log
 
 class Hub:
     def __init__(self, config_manager: ConfigManager):
@@ -104,7 +106,7 @@ class Hub:
         destination: Destination,
         source_device: SourceDevice,
     ) -> DestinationDevice:
-        print('get destination device')
+        log.info('get destination device')
         for source_name, destination_name, destination_device in self._link_destination_device_cache:
             # TODO invalidate cache when updating matching config
             if source_name == source.name and destination_name == destination.name:
@@ -127,7 +129,7 @@ class Hub:
                         destination_device = dst
                         break
             if destination_device is not None:
-                print('forward', source_device, destination_device)
+                log.info(f'forward {source_device} {destination_device}')
                 # TODO transforms
                 events_iter = iter(source_device.events())
                 try:
@@ -140,7 +142,7 @@ class Hub:
 
     def _monitor_devices(self):
         for action, udev_device, rule in self._device_monitor.events():
-            print(action, udev_device, rule)
+            log.info(f'{action} {udev_device} {rule}')
             if action == 'add':
                 source_device = EvdevSourceDevice.from_udev(udev_device, rule)
                 threading.Thread(target=self._forward_events, args=(source_device,)).start()
@@ -155,15 +157,15 @@ class Hub:
 
     def _monitor_config(self):
         for event in self._config_manager.events():
-            print(event)
+            log.info(f'{event}')
             obj = event['object']
             if event['type'] == 'add':
                 if isinstance(obj, Source):
                     if isinstance(obj, EvdevUdevSource):
-                        print('add monitored attributes', obj.identifier)
+                        log.info(f'add monitored attributes {obj.identifier}')
                         self._device_monitor.add_monitored_attrs(obj.identifier)
                     elif isinstance(obj, EvdevUnixSocketSource):
-                        print('TODO', obj)
+                        log.info(f'TODO {obj}')
                 elif isinstance(obj, SourceGroup):
                     pass
                 elif isinstance(obj, Destination):
@@ -183,7 +185,7 @@ class Hub:
             source_device = UnixSocketSourceDevice.from_ipc(first_event, events_iter)
             # TODO stop existing thread
             threading.Thread(target=self._forward_events, args=(source_device,)).start()
-            print('new ipc source device available', source_device)
+            log.info(f'new ipc source device available {source_device}')
             self._source_devices.append(source_device)
             self._update_links()
         for events in self._ipc_manager.events():

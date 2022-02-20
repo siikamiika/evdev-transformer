@@ -14,6 +14,7 @@ import json
 import socket
 import functools
 import time
+import logging
 
 import libevdev
 
@@ -26,6 +27,7 @@ from .transform import (
 from .activator import (
     DeviceLinkActivator,
 )
+from . import log
 
 class SourceDevice:
     def __init__(self, device, identifier):
@@ -485,7 +487,7 @@ class SubprocessDestinationDevice(DestinationDevice):
                     self._send_data_raw(data)
                 except (BrokenPipeError, AttributeError):
                     self._details_sent = False
-                    print('Created new handle')
+                    log.info('Created new handle')
                     self._handle = self._create_handle()
                     try:
                         self._send_data_raw(self._get_details_data())
