@@ -102,10 +102,10 @@ class Hub:
         destination: Destination,
         source_device: SourceDevice,
     ) -> DestinationDevice:
-        log.info('get destination device')
         for source_name, destination_name, destination_device in self._link_destination_device_cache:
             # TODO invalidate cache when updating matching config
             if source_name == source.name and destination_name == destination.name:
+                log.debug(f'loaded destination device from cache {destination_device}')
                 return destination_device
         if isinstance(destination, UinputDestination):
             destination_device = UinputDestinationDevice.create(source_device)
@@ -114,6 +114,7 @@ class Hub:
         else:
             raise NotImplementedError(f'Destination {destination} not implemented')
         self._link_destination_device_cache.append((source.name, destination.name, destination_device))
+        log.debug(f'created destination device {destination_device}')
         return destination_device
 
     def _forward_events(self, source_device: SourceDevice):

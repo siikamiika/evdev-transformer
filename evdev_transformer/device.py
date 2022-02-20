@@ -502,7 +502,22 @@ class SubprocessDestinationDevice(DestinationDevice):
 
             def _create_handle(self) -> subprocess.Popen:
                 # TODO two-way communication? ACK etc
-                return subprocess.Popen(self._command, stdin=subprocess.PIPE, shell=True)
+                handle = subprocess.Popen(
+                    self._command,
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    shell=True
+                )
+                def _log_stdout(stream):
+                    for line in iter(stream.readline, b''):
+                        log.info('_SubprocessDevice.STDOUT: ' + line.decode('utf-8', 'ignore'))
+                def _log_stderr(stream):
+                    for line in iter(stream.readline, b''):
+                        log.error('_SubprocessDevice.STDERR: ' + line.decode('utf-8', 'ignore'))
+                threading.Thread(target=_log_stdout, args=(handle.stdout,)).start()
+                threading.Thread(target=_log_stderr, args=(handle.stderr,)).start()
+                return handle
         return _SubprocessDevice(self._properties['command'], self._serialize())
 
 class HidGadgetDestinationDevice(DestinationDevice):
