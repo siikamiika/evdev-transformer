@@ -6,9 +6,6 @@ from typing import (
     Iterable,
 )
 import functools
-import logging
-
-import libevdev
 
 from .config import (
     ConfigManager,
@@ -19,7 +16,6 @@ from .config import (
     Destination,
     UinputDestination,
     SubprocessDestination,
-    Activator,
     Link,
 )
 from .system_events import InputDeviceMonitor

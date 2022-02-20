@@ -14,7 +14,6 @@ import json
 import socket
 import functools
 import time
-import logging
 
 import libevdev
 
