@@ -1,7 +1,7 @@
 import logging
 import sys
 
-_FORMAT = '{asctime} {name}.{levelname} {filename}:{lineno} [{threadName}]: {message}'
+_FORMAT = '{asctime} {name}.{levelname} {filename}:{lineno} ({funcName}) [{threadName}]: {message}'
 _LOGGER = None
 
 def init(logger_name, log_level_name):
