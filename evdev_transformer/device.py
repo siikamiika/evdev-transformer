@@ -135,6 +135,8 @@ class SourceDevice:
             for activator in self._activators:
                 if activator.matches_event(transformed_event):
                     activator.activate()
+                    # TODO is this correct with multi touch protocol and EV_MSC
+                    self._buffer = []
                     break
             else:
                 yield from self._handle_event2(transformed_event)
