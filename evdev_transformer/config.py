@@ -209,6 +209,7 @@ class Destination:
         cls_ = {
             'uinput': UinputDestination,
             'subprocess': SubprocessDestination,
+            'hid_gadget': HidGadgetDestination,
         }[data['type']]
         return cls_(
             data['name'],
@@ -250,6 +251,12 @@ class SubprocessDestination(Destination):
     def _validate(self):
         super()._validate()
         assert isinstance(self._properties.get('command'), str)
+
+class HidGadgetDestination(Destination):
+    def to_dict(self):
+        d = super().to_dict()
+        d['type'] = 'hid_gadget'
+        return d
 
 class Activator:
     def __init__(self, properties: Dict):

@@ -16,6 +16,7 @@ from .config import (
     Destination,
     UinputDestination,
     SubprocessDestination,
+    HidGadgetDestination,
     Link,
 )
 from .system_events import InputDeviceMonitor
@@ -26,6 +27,7 @@ from .device import (
     DestinationDevice,
     UinputDestinationDevice,
     SubprocessDestinationDevice,
+    HidGadgetDestinationDevice,
 )
 from .transform import (
     EventTransform,
@@ -111,6 +113,8 @@ class Hub:
             destination_device = UinputDestinationDevice.create(source_device)
         elif isinstance(destination, SubprocessDestination):
             destination_device = SubprocessDestinationDevice.create(source_device, {'command': destination.command})
+        elif isinstance(destination, HidGadgetDestination):
+            destination_device = HidGadgetDestinationDevice.create(source_device)
         else:
             raise NotImplementedError(f'Destination {destination} not implemented')
         self._link_destination_device_cache.append((source.name, destination.name, destination_device))

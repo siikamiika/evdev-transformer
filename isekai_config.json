@@ -87,6 +87,12 @@
             "type": "uinput",
             "transforms": [],
             "properties": {}
+        },
+        {
+            "name": "HID Emu",
+            "type": "hid_gadget",
+            "transforms": [],
+            "properties": {}
         }
     ],
     "links": [
@@ -108,6 +114,21 @@
         {
             "source_group": "🍎",
             "destination": "Master",
+            "activators": [
+                {
+                    "type": "hotkey",
+                    "properties": {
+                        "hotkey": {
+                            "key": "KEY_TAB",
+                            "modifiers": ["KEY_LEFTMETA"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "source_group": "🍎",
+            "destination": "HID Emu",
             "activators": [
                 {
                     "type": "hotkey",
