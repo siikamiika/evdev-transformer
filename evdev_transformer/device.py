@@ -701,6 +701,8 @@ class HidGadgetDestinationDevice(DestinationDevice):
         }
         class _HidGadgetDevice:
             _REPORT_ID = 0x01
+            _HID_MODIFIER_BEGIN = 0xe0 # left control
+            _HID_MODIFIER_END = 0xe7 # right meta
             def __init__(self):
                 self._report = bytearray(8)
                 self._modifier_byte = memoryview(self._report)[0:1]
@@ -719,6 +721,9 @@ class HidGadgetDestinationDevice(DestinationDevice):
                         self._send_report()
                 # log.debug(events)
             def _add_keycode_to_report(self, code):
+                if self._HID_MODIFIER_BEGIN <= code <= self._HID_MODIFIER_END:
+                    self._modifier_byte[0] |= 1 << (code - self._HID_MODIFIER_BEGIN)
+                    return
                 for i in range(6):
                     if self._key_bytes[i] == code:
                         return
@@ -728,6 +733,9 @@ class HidGadgetDestinationDevice(DestinationDevice):
                         return
                 # TODO too many keys pressed
             def _remove_keycode_from_report(self, code):
+                if self._HID_MODIFIER_BEGIN <= code <= self._HID_MODIFIER_END:
+                    self._modifier_byte[0] &= ~(1 << (code - self._HID_MODIFIER_BEGIN))
+                    return
                 for i in range(6):
                     if self._key_bytes[i] == code:
                         self._key_bytes[i] = 0
