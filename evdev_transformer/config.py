@@ -60,6 +60,10 @@ class ScriptTransform(Transform):
         d['type'] = 'script'
         return d
 
+    @property
+    def filename(self) -> str:
+        return self._properties['filename']
+
     def _validate(self):
         super()._validate()
         assert isinstance(self._properties.get('filename'), str)

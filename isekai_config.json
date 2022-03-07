@@ -4,7 +4,14 @@
         {
             "name": "Apple Inc. Magic Trackpad 2",
             "type": "evdev_udev",
-            "transforms": [],
+            "transforms": [
+                {
+                    "type": "script",
+                    "properties": {
+                        "filename": "~/.local/lib/evdev_transformer/transforms/magic_trackpad_driver.py"
+                    }
+                }
+            ],
             "properties": {
                 "udev": {
                     "ID_VENDOR": "Apple_Inc.",

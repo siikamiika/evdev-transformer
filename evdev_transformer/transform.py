@@ -4,6 +4,8 @@ from typing import (
     Callable,
     Iterable,
 )
+import os
+import pydoc
 
 import libevdev
 
@@ -12,6 +14,7 @@ from .config import (
     KeyRemapTransform,
     ScriptTransform,
 )
+from . import log
 
 class EventTransform:
     def __init__(
@@ -29,6 +32,8 @@ class EventTransform:
     def from_config(cls, transform_config: Transform) -> EventTransform:
         if isinstance(transform_config, KeyRemapTransform):
             return KeyRemapEventTransform.from_config(transform_config)
+        elif isinstance(transform_config, ScriptTransform):
+            return ScriptEventTransform.from_config(transform_config)
         raise NotImplementedError
 
     def matches_event(self, event: libevdev.InputEvent) -> bool:
@@ -52,3 +57,13 @@ class KeyRemapEventTransform(EventTransform):
         def _transform_event(event: libevdev.InputEvent) -> Iterable[libevdev.InputEvent]:
             yield libevdev.InputEvent(event_map[event.code], event.value)
         return cls(input_codes, output_codes, _transform_event)
+
+class ScriptEventTransform(EventTransform):
+    @classmethod
+    def from_config(cls, transform_config: ScriptTransform) -> ScriptEventTransform:
+        input_codes = set()
+        output_codes = set()
+        script_path = os.path.expanduser(transform_config.filename)
+        script = pydoc.importfile(script_path)
+        script.init(locals(), globals())
+        return cls(input_codes, output_codes, script._transform_event)
