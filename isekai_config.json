@@ -9,8 +9,7 @@
                 "udev": {
                     "ID_VENDOR": "Apple_Inc.",
                     "ID_INPUT_TOUCHPAD": "1",
-                    "MAJOR": "13",
-                    "MINOR": "71"
+                    "ID_USB_INTERFACE_NUM": "01"
                 }
             }
         },
