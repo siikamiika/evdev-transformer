@@ -29,6 +29,10 @@ class EventTransform:
         self._output_codes = output_codes
         self._transform_event_fn = transform_event_fn
 
+    @property
+    def output_codes(self) -> Set[libevdev.EventCode]:
+        return self._output_codes
+
     @classmethod
     def from_config(cls, transform_config: Transform) -> EventTransform:
         if isinstance(transform_config, KeyRemapTransform):

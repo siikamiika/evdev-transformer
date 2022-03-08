@@ -240,6 +240,15 @@ class EvdevSourceDevice(SourceDevice):
 
     @property
     def evbits(self) -> Dict[libevdev.EventType, List[libevdev.EventCode]]:
+        # # TODO use config
+        # if libevdev.EV_REL not in self._device.evbits and libevdev.EV_ABS in self._device.evbits:
+        #     import copy
+        #     new = copy.deepcopy(self._device.evbits)
+        #     new[libevdev.EV_REL] = [
+        #         libevdev.EV_REL.REL_X,
+        #         libevdev.EV_REL.REL_Y,
+        #     ]
+        #     return new
         return self._device.evbits
 
     @property
@@ -440,6 +449,9 @@ class UinputDestinationDevice(DestinationDevice):
         for type_, evbits in self._evbits.items():
             for evbit in evbits:
                 if type_ == libevdev.EV_ABS:
+                    if evbit not in self._absinfo:
+                        log.error(f'evbit not found: {evbit} {self._absinfo}')
+                        continue
                     data = self._absinfo[evbit]
                 elif type_ == libevdev.EV_REP:
                     data = self._rep_value[evbit]
