@@ -139,6 +139,7 @@ class Hub:
                 except StopIteration:
                     break
                 for events in events_iter:
+                    log.debug(f'forward events {events} from {source_device} to {destination_device}')
                     destination_device.send_events(events)
 
     def _monitor_devices(self):

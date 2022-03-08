@@ -50,8 +50,6 @@ class MagicTrackpadDriver:
         self._prev_slot = None
 
     def handle_event(self, event: libevdev.InputEvent) -> Iterable[libevdev.InputEvent]:
-        yield event
-        return
         if event.code == libevdev.EV_ABS.ABS_MT_SLOT:
             # TODO
             self._prev_slot = event.value

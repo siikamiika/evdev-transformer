@@ -4,14 +4,7 @@
         {
             "name": "Apple Inc. Magic Trackpad 2",
             "type": "evdev_udev",
-            "transforms": [
-                {
-                    "type": "script",
-                    "properties": {
-                        "filename": "~/.local/lib/evdev_transformer/transforms/magic_trackpad_driver.py"
-                    }
-                }
-            ],
+            "transforms": [],
             "properties": {
                 "udev": {
                     "ID_VENDOR": "Apple_Inc.",
@@ -32,6 +25,12 @@
                             "KEY_HENKAN": "KEY_RIGHTALT",
                             "KEY_KATAKANAHIRAGANA": "KEY_BACKSPACE"
                         }
+                    }
+                },
+                {
+                    "type": "script",
+                    "properties": {
+                        "filename": "~/.local/lib/evdev_transformer/transforms/right_alt_navigation_keys.py"
                     }
                 }
             ],
