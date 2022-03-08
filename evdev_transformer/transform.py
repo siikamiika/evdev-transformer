@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import (
     Set,
+    Tuple,
     Callable,
     Iterable,
 )
@@ -61,9 +62,7 @@ class KeyRemapEventTransform(EventTransform):
 class ScriptEventTransform(EventTransform):
     @classmethod
     def from_config(cls, transform_config: ScriptTransform) -> ScriptEventTransform:
-        input_codes = set()
-        output_codes = set()
         script_path = os.path.expanduser(transform_config.filename)
         script = pydoc.importfile(script_path)
-        script.init(locals(), globals())
-        return cls(input_codes, output_codes, script._transform_event)
+        res: Tuple[Set, Set, Callable] = script.run(log)
+        return cls(*res)
