@@ -38,12 +38,14 @@ def run(log):
         output_codes.add(v)
 
     mod_pressed = False
+    mod_key_states = {}
     def _transform_event(event: libevdev.InputEvent) -> Iterable[libevdev.InputEvent]:
         nonlocal mod_pressed
         if event.code == libevdev.EV_KEY.KEY_RIGHTALT:
             mod_pressed = bool(event.value)
             yield event
-        elif mod_pressed and event.code in event_map:
+        elif (mod_pressed or mod_key_states.get(event.code, -1) > 0) and event.code in event_map:
+            mod_key_states[event.code] = event.value
             yield libevdev.InputEvent(event_map[event.code], event.value)
         else:
             yield event
