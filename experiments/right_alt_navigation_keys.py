@@ -37,17 +37,20 @@ def run(log):
         output_codes.add(k)
         output_codes.add(v)
 
-    mod_pressed = False
-    mod_key_states = {}
+    key_states = {}
+    def _is_pressed(code: libevdev.EventCode):
+        return key_states.get(code, 0) > 0
     def _transform_event(event: libevdev.InputEvent) -> Iterable[libevdev.InputEvent]:
-        nonlocal mod_pressed
         if event.code == libevdev.EV_KEY.KEY_RIGHTALT:
-            mod_pressed = bool(event.value)
             yield event
-        elif (mod_pressed or mod_key_states.get(event.code, -1) > 0) and event.code in event_map:
-            mod_key_states[event.code] = event.value
-            yield libevdev.InputEvent(event_map[event.code], event.value)
+            key_states[event.code] = event.value
+            return
+        mapped_code = event_map.get(event.code)
+        if mapped_code is not None and (_is_pressed(libevdev.EV_KEY.KEY_RIGHTALT) or _is_pressed(mapped_code)):
+            yield libevdev.InputEvent(mapped_code, event.value)
+            key_states[mapped_code] = event.value
         else:
             yield event
+            key_states[event.code] = event.value
 
     return input_codes, output_codes, _transform_event
