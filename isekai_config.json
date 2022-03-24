@@ -14,6 +14,17 @@
             }
         },
         {
+            "name": "Apple Inc. Magic Trackpad 2 (bluetooth)",
+            "type": "evdev_udev",
+            "transforms": [],
+            "properties": {
+                "udev": {
+                    "ID_BUS": "bluetooth",
+                    "ID_INPUT_TOUCHPAD": "1"
+                }
+            }
+        },
+        {
             "name": "JIS Keyboard",
             "type": "evdev_udev",
             "transforms": [
@@ -67,6 +78,7 @@
             "name": "🍎",
             "sources": [
                 "Apple Inc. Magic Trackpad 2",
+                "Apple Inc. Magic Trackpad 2 (bluetooth)",
                 "JIS Keyboard"
             ]
         },
