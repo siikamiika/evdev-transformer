@@ -395,7 +395,7 @@ class DestinationDevice:
     def create(
         cls,
         source_device: SourceDevice,
-        properties: Dict = None,
+        properties: Optional[Dict] = None,
     ) -> DestinationDevice:
         return cls(
             source_device.name + ' (Virtual)',
