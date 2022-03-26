@@ -92,18 +92,18 @@
     ],
     "destinations": [
         {
+            "name": "Master",
+            "type": "uinput",
+            "transforms": [],
+            "properties": {}
+        },
+        {
             "name": "es",
             "type": "subprocess",
             "transforms": [],
             "properties": {
                 "command": "ssh es.lan -- socat - UNIX-CONNECT:\"$XDG_RUNTIME_DIR\/evdev-ipc.sock\""
             }
-        },
-        {
-            "name": "Master",
-            "type": "uinput",
-            "transforms": [],
-            "properties": {}
         },
         {
             "name": "HID Emu",
@@ -115,7 +115,7 @@
     "links": [
         {
             "source_group": "🍎",
-            "destination": "es",
+            "destination": "Master",
             "activators": [
                 {
                     "type": "hotkey",
@@ -130,7 +130,7 @@
         },
         {
             "source_group": "🍎",
-            "destination": "Master",
+            "destination": "es",
             "activators": [
                 {
                     "type": "hotkey",
