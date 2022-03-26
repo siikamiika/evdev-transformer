@@ -12,6 +12,16 @@
             }
         },
         {
+            "name": "Apple Inc. Magic Trackpad 2 (bluetooth) (Remote)",
+            "type": "evdev_unix_socket",
+            "transforms": [],
+            "properties": {
+                "host": "isekai",
+                "vendor": 76,
+                "product": 613
+            }
+        },
+        {
             "name": "JIS Keyboard (Remote)",
             "type": "evdev_unix_socket",
             "transforms": [],
