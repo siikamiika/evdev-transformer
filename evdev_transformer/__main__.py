@@ -24,6 +24,7 @@ args = parser.parse_args()
 log_level_name = args.log or os.environ.get('LOGLEVEL', 'WARNING')
 log.init(NAME, log_level_name)
 
-config_manager = ConfigManager(args.config)
+config_path = os.path.expanduser(f'~/.config/evdev_transformer/{args.config}.json')
+config_manager = ConfigManager(config_path)
 hub = Hub(config_manager)
 hub.start()

@@ -1,0 +1,9 @@
+# vi: ft=systemd
+[Unit]
+Description=evdev transformer
+
+[Service]
+ExecStart=python -m evdev_transformer %I
+
+[Install]
+WantedBy=default.target

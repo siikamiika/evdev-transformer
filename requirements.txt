@@ -1,3 +1,0 @@
-libevdev
-pyudev
-git+https://github.com/siikamiika/python-libinput@master#egg=python-libinput
