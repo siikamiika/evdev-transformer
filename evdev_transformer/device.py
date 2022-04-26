@@ -386,6 +386,17 @@ class DestinationDevice:
         self._rep_value = rep_value
         self._input_properties = input_properties
         self._properties = properties or {}
+        # if 'Apple' in name:
+        #     # fake touchscreen
+        #     self._input_properties = [libevdev.propbit('INPUT_PROP_DIRECT')]
+        #     # fake tablet
+        #     self._evbits[libevdev.evbit('EV_KEY')].remove(libevdev.evbit('BTN_TOOL_FINGER'))
+        #     self._evbits[libevdev.evbit('EV_KEY')] += [
+        #         libevdev.evbit('BTN_TOOL_PEN'),
+        #         libevdev.evbit('BTN_TOOL_RUBBER'),
+        #         libevdev.evbit('BTN_STYLUS'),
+        #         libevdev.evbit('BTN_STYLUS2'),
+        #     ]
         self._device = self._create_device()
 
     def __repr__(self) -> str:
