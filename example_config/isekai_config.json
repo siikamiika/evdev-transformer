@@ -53,6 +53,26 @@
             }
         },
         {
+            "name": "Logitech G305",
+            "type": "evdev_udev",
+            "transforms": [
+                {
+                    "type": "script",
+                    "properties": {
+                        "filename": "~/.local/lib/evdev_transformer/transforms/mouse_extra_features.py"
+                    }
+                }
+            ],
+            "properties": {
+                "udev": {
+                    "ID_VENDOR_ID": "046d",
+                    "ID_MODEL_ID": "c53f",
+                    "ID_INPUT_KEYBOARD": "1",
+                    "ID_INPUT_MOUSE": "1"
+                }
+            }
+        },
+        {
             "name": "Chromebook Keyboard (Remote)",
             "type": "evdev_unix_socket",
             "transforms": [],
@@ -79,7 +99,8 @@
             "sources": [
                 "Apple Inc. Magic Trackpad 2",
                 "Apple Inc. Magic Trackpad 2 (bluetooth)",
-                "JIS Keyboard"
+                "JIS Keyboard",
+                "Logitech G305"
             ]
         },
         {
