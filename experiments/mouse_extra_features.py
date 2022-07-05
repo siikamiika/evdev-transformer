@@ -158,10 +158,7 @@ def run(log):
             if (
                 prev_btn_extra_event
                 and event.value == 0
-                and (
-                    (event.sec + event.usec / 10 ** 6)
-                    - (prev_btn_extra_event.sec + prev_btn_extra_event.usec / 10 ** 6)
-                ) < 0.18
+                and _event_occurrence_diff(event, prev_btn_extra_event) < 0.18
             ):
                 yield libevdev.InputEvent(libevdev.EV_KEY.BTN_EXTRA, 1)
                 yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
