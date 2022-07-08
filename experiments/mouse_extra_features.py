@@ -12,7 +12,7 @@ def run(log):
         'BTN_LEFT', 'BTN_RIGHT', 'BTN_MIDDLE',
         'BTN_SIDE', 'BTN_EXTRA',
         'REL_X', 'REL_Y',
-        'REL_WHEEL', 'REL_HWHEEL',
+        'REL_WHEEL', 'REL_HWHEEL', 'REL_WHEEL_HI_RES', 'REL_HWHEEL_HI_RES',
         'SYN_REPORT',
     ]
     out_code_names = [
