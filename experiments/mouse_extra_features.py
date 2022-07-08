@@ -5,6 +5,7 @@ from typing import (
 import libevdev
 
 _SIDE_BUTTON_MODIFIER_DELAY = 0.18
+_SCROLL_FACTOR = 0.2
 
 def run(log):
     input_codes = set()
@@ -36,8 +37,10 @@ def run(log):
         )
 
     prev_events_by_code: Dict[libevdev.EventCode, libevdev.InputEvent] = {}
-    # TODO divmod 7
-    scroll_remainder_by_code: Dict[libevdev.EventCode, int] = {}
+    scroll_remainder_by_code: Dict[libevdev.EventCode, int] = {
+        libevdev.EV_REL.REL_X: 0,
+        libevdev.EV_REL.REL_Y: 0,
+    }
     def _transform_event(event: libevdev.InputEvent) -> Iterable[libevdev.InputEvent]:
         # skip repeat so that EV_KEY value can only be 0 or 1
         if event.type == libevdev.EV_KEY and event.value == 2:
@@ -52,7 +55,12 @@ def run(log):
                 and _event_occurrence_diff(event, prev_btn_extra_event) >= _SIDE_BUTTON_MODIFIER_DELAY
             ):
                 direction = -1 if event.value < 0 else 1
-                for _ in range(abs(event.value)):
+                steps, rem = divmod(
+                    abs(event.value + scroll_remainder_by_code[libevdev.EV_REL.REL_X]),
+                    1 / _SCROLL_FACTOR
+                )
+                scroll_remainder_by_code[libevdev.EV_REL.REL_X] = rem * direction
+                for _ in range(int(steps)):
                     yield libevdev.InputEvent(libevdev.EV_REL.REL_HWHEEL, direction)
                     yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
             else:
@@ -65,10 +73,15 @@ def run(log):
                 and prev_btn_extra_event.value == 1
                 and _event_occurrence_diff(event, prev_btn_extra_event) >= _SIDE_BUTTON_MODIFIER_DELAY
             ):
-                # reversed on purpose
-                direction = 1 if event.value < 0 else -1
-                for _ in range(abs(event.value)):
-                    yield libevdev.InputEvent(libevdev.EV_REL.REL_WHEEL, direction)
+                direction = -1 if event.value < 0 else 1
+                steps, rem = divmod(
+                    abs(event.value + scroll_remainder_by_code[libevdev.EV_REL.REL_Y]),
+                    1 / _SCROLL_FACTOR
+                )
+                scroll_remainder_by_code[libevdev.EV_REL.REL_Y] = rem * direction
+                for _ in range(int(steps)):
+                    # reversed on purpose
+                    yield libevdev.InputEvent(libevdev.EV_REL.REL_WHEEL, -direction)
                     yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
             else:
                 yield event
