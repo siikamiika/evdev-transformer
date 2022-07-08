@@ -4,6 +4,8 @@ from typing import (
 )
 import libevdev
 
+_SIDE_BUTTON_MODIFIER_DELAY = 0.18
+
 def run(log):
     input_codes = set()
     output_codes = set()
@@ -44,7 +46,11 @@ def run(log):
         # relative
         if event.code == libevdev.EV_REL.REL_X:
             prev_btn_extra_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_EXTRA)
-            if prev_btn_extra_event and prev_btn_extra_event.value == 1 and _event_occurrence_diff(event, prev_btn_extra_event) >= 0.18:
+            if (
+                prev_btn_extra_event
+                and prev_btn_extra_event.value == 1
+                and _event_occurrence_diff(event, prev_btn_extra_event) >= _SIDE_BUTTON_MODIFIER_DELAY
+            ):
                 direction = -1 if event.value < 0 else 1
                 for _ in range(abs(event.value)):
                     yield libevdev.InputEvent(libevdev.EV_REL.REL_HWHEEL, direction)
@@ -54,7 +60,11 @@ def run(log):
                 yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
         elif event.code == libevdev.EV_REL.REL_Y:
             prev_btn_extra_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_EXTRA)
-            if prev_btn_extra_event and prev_btn_extra_event.value == 1 and _event_occurrence_diff(event, prev_btn_extra_event) >= 0.18:
+            if (
+                prev_btn_extra_event
+                and prev_btn_extra_event.value == 1
+                and _event_occurrence_diff(event, prev_btn_extra_event) >= _SIDE_BUTTON_MODIFIER_DELAY
+            ):
                 # reversed on purpose
                 direction = 1 if event.value < 0 else -1
                 for _ in range(abs(event.value)):
@@ -146,8 +156,9 @@ def run(log):
             prev_btn_side_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_SIDE)
             if (
                 prev_btn_side_event
+                and prev_btn_side_event.value == 1
                 and event.value == 0
-                and _event_occurrence_diff(event, prev_btn_side_event) < 0.18
+                and _event_occurrence_diff(event, prev_btn_side_event) < _SIDE_BUTTON_MODIFIER_DELAY
             ):
                 yield libevdev.InputEvent(libevdev.EV_KEY.BTN_SIDE, 1)
                 yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
@@ -157,8 +168,9 @@ def run(log):
             prev_btn_extra_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_EXTRA)
             if (
                 prev_btn_extra_event
+                and prev_btn_extra_event.value == 1
                 and event.value == 0
-                and _event_occurrence_diff(event, prev_btn_extra_event) < 0.18
+                and _event_occurrence_diff(event, prev_btn_extra_event) < _SIDE_BUTTON_MODIFIER_DELAY
             ):
                 yield libevdev.InputEvent(libevdev.EV_KEY.BTN_EXTRA, 1)
                 yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
