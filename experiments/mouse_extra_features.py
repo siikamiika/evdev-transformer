@@ -48,10 +48,10 @@ def run(log):
                 direction = -1 if event.value < 0 else 1
                 for _ in range(abs(event.value)):
                     yield libevdev.InputEvent(libevdev.EV_REL.REL_HWHEEL, direction)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
             else:
                 yield event
-                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
         elif event.code == libevdev.EV_REL.REL_Y:
             prev_btn_extra_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_EXTRA)
             if prev_btn_extra_event and prev_btn_extra_event.value == 1 and _event_occurrence_diff(event, prev_btn_extra_event) >= 0.18:
@@ -59,89 +59,89 @@ def run(log):
                 direction = 1 if event.value < 0 else -1
                 for _ in range(abs(event.value)):
                     yield libevdev.InputEvent(libevdev.EV_REL.REL_WHEEL, direction)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
             else:
                 yield event
-                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
         elif event.code == libevdev.EV_REL.REL_WHEEL:
             prev_btn_side_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_SIDE)
             if prev_btn_side_event and prev_btn_side_event.value == 1:
                 if event.value < 0:
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_LEFTCTRL, 1)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_TAB, 1)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_TAB, 0)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_LEFTCTRL, 0)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                 else:
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_LEFTCTRL, 1)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_LEFTSHIFT, 1)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_TAB, 1)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_TAB, 0)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_LEFTCTRL, 0)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_LEFTSHIFT, 0)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
             else:
                 yield event
-                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
         elif event.code == libevdev.EV_REL.REL_HWHEEL:
             yield event
-            yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+            yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
         # button
         elif event.code == libevdev.EV_KEY.BTN_LEFT:
             prev_btn_side_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_SIDE)
             if prev_btn_side_event and prev_btn_side_event.value == 1 and event.value == 1:
                 yield libevdev.InputEvent(libevdev.EV_KEY.KEY_LEFTMETA, 1)
-                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                 yield libevdev.InputEvent(libevdev.EV_KEY.KEY_F, 1)
-                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                 yield libevdev.InputEvent(libevdev.EV_KEY.KEY_F, 0)
-                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                 yield libevdev.InputEvent(libevdev.EV_KEY.KEY_LEFTMETA, 0)
-                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
             else:
                 yield event
-                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
         elif event.code == libevdev.EV_KEY.BTN_RIGHT:
             yield event
-            yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+            yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
         elif event.code == libevdev.EV_KEY.BTN_MIDDLE:
             prev_btn_side_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_SIDE)
             prev_btn_extra_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_EXTRA)
             if prev_btn_side_event and prev_btn_side_event.value == 1:
                 if event.value == 1:
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_LEFTCTRL, 1)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_W, 1)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_W, 0)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_LEFTCTRL, 0)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
             elif prev_btn_extra_event and prev_btn_extra_event.value == 1:
                 if event.value == 1:
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_LEFTSHIFT, 1)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_LEFTCTRL, 1)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_T, 1)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_T, 0)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_LEFTCTRL, 0)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_LEFTSHIFT, 0)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
             else:
                 yield event
-                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
         elif event.code == libevdev.EV_KEY.BTN_SIDE:
             prev_btn_side_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_SIDE)
             if (
@@ -150,9 +150,9 @@ def run(log):
                 and _event_occurrence_diff(event, prev_btn_side_event) < 0.18
             ):
                 yield libevdev.InputEvent(libevdev.EV_KEY.BTN_SIDE, 1)
-                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                 yield event
-                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
         elif event.code == libevdev.EV_KEY.BTN_EXTRA:
             prev_btn_extra_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_EXTRA)
             if (
@@ -161,9 +161,9 @@ def run(log):
                 and _event_occurrence_diff(event, prev_btn_extra_event) < 0.18
             ):
                 yield libevdev.InputEvent(libevdev.EV_KEY.BTN_EXTRA, 1)
-                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                 yield event
-                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 1)
+                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
         prev_events_by_code[event.code] = event
 
     return input_codes, output_codes, _transform_event
