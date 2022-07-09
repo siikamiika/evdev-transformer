@@ -55,14 +55,12 @@ def run(log):
                 and _event_occurrence_diff(event, prev_btn_extra_event) >= _SIDE_BUTTON_MODIFIER_DELAY
             ):
                 direction = -1 if event.value < 0 else 1
-                steps, rem = divmod(
-                    abs(event.value + scroll_remainder_by_code[libevdev.EV_REL.REL_X]),
-                    1 / _SCROLL_FACTOR
-                )
-                scroll_remainder_by_code[libevdev.EV_REL.REL_X] = rem * direction
-                for _ in range(int(steps)):
+                rem = event.value + scroll_remainder_by_code[libevdev.EV_REL.REL_X]
+                while abs(rem) > 1 / _SCROLL_FACTOR:
                     yield libevdev.InputEvent(libevdev.EV_REL.REL_HWHEEL, direction)
                     yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
+                    rem -= direction / _SCROLL_FACTOR
+                scroll_remainder_by_code[libevdev.EV_REL.REL_X] = rem
             else:
                 yield event
                 yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
@@ -74,15 +72,13 @@ def run(log):
                 and _event_occurrence_diff(event, prev_btn_extra_event) >= _SIDE_BUTTON_MODIFIER_DELAY
             ):
                 direction = -1 if event.value < 0 else 1
-                steps, rem = divmod(
-                    abs(event.value + scroll_remainder_by_code[libevdev.EV_REL.REL_Y]),
-                    1 / _SCROLL_FACTOR
-                )
-                scroll_remainder_by_code[libevdev.EV_REL.REL_Y] = rem * direction
-                for _ in range(int(steps)):
+                rem = event.value + scroll_remainder_by_code[libevdev.EV_REL.REL_Y]
+                while abs(rem) > 1 / _SCROLL_FACTOR:
                     # reversed on purpose
                     yield libevdev.InputEvent(libevdev.EV_REL.REL_WHEEL, -direction)
                     yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
+                    rem -= direction / _SCROLL_FACTOR
+                scroll_remainder_by_code[libevdev.EV_REL.REL_Y] = rem
             else:
                 yield event
                 yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
