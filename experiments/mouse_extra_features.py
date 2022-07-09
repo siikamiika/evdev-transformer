@@ -38,6 +38,7 @@ def run(log):
         )
 
     prev_events_by_code: Dict[libevdev.EventCode, libevdev.InputEvent] = {}
+    suppress_release_by_code: Dict[libevdev.EventCode, bool] = {}
     scroll_remainder_by_code: Dict[libevdev.EventCode, int] = {
         libevdev.EV_REL.REL_X: 0,
         libevdev.EV_REL.REL_Y: 0,
@@ -136,13 +137,19 @@ def run(log):
         elif event.code == libevdev.EV_KEY.BTN_RIGHT:
             # suppress when modifier button is pressed to be used as a multi-button modifier
             prev_btn_extra_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_EXTRA)
-            if not (
+            if (
                 prev_btn_extra_event
                 and prev_btn_extra_event.value == 1
                 and _event_occurrence_diff(event, prev_btn_extra_event) >= _SIDE_BUTTON_MODIFIER_DELAY
             ):
-                yield event
-                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
+                if event.value == 1:
+                    suppress_release_by_code[event.code] = True
+            else:
+                if not suppress_release_by_code.get(event.code):
+                    yield event
+                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
+            if event.value == 0 and suppress_release_by_code.get(event.code):
+                suppress_release_by_code[event.code] = False
         elif event.code == libevdev.EV_KEY.BTN_MIDDLE:
             prev_btn_side_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_SIDE)
             prev_btn_extra_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_EXTRA)
