@@ -1,6 +1,7 @@
 from typing import (
     Iterable,
     Dict,
+    List,
 )
 import libevdev
 
@@ -43,53 +44,50 @@ def run(log):
         libevdev.EV_REL.REL_X: 0,
         libevdev.EV_REL.REL_Y: 0,
     }
-    def _transform_event(event: libevdev.InputEvent) -> Iterable[libevdev.InputEvent]:
+    def _transform_events(events: List[libevdev.InputEvent]) -> Iterable[libevdev.InputEvent]:
         # skip repeat so that EV_KEY value can only be 0 or 1
-        if event.type == libevdev.EV_KEY and event.value == 2:
-            return
+        events = [e for e in events if not (e.type == libevdev.EV_KEY and e.value == 2) and not e.type == libevdev.EV_SYN]
+        codes = {e.code for e in events}
 
         # relative
-        if event.code == libevdev.EV_REL.REL_X:
+        if codes & {libevdev.EV_REL.REL_X, libevdev.EV_REL.REL_Y}:
             prev_btn_extra_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_EXTRA)
+            event_x = next((e for e in events if e.code == libevdev.EV_REL.REL_X), None)
+            event_y = next((e for e in events if e.code == libevdev.EV_REL.REL_Y), None)
             if (
                 prev_btn_extra_event
                 and prev_btn_extra_event.value == 1
-                and _event_occurrence_diff(event, prev_btn_extra_event) >= _SIDE_BUTTON_MODIFIER_DELAY
+                and _event_occurrence_diff(events[-1], prev_btn_extra_event) >= _SIDE_BUTTON_MODIFIER_DELAY
             ):
                 prev_btn_right_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_RIGHT)
-                direction = -1 if event.value < 0 else 1
-                rem = event.value + scroll_remainder_by_code[libevdev.EV_REL.REL_X]
-                step = (1 / _SCROLL_FACTOR_FAST) if (prev_btn_right_event and prev_btn_right_event.value == 1) else (1 / _SCROLL_FACTOR)
-                while direction * rem > step:
-                    yield libevdev.InputEvent(libevdev.EV_REL.REL_HWHEEL, direction)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
-                    rem -= direction * step
-                scroll_remainder_by_code[libevdev.EV_REL.REL_X] = rem
+                if event_x:
+                    direction = -1 if event_x.value < 0 else 1
+                    rem = event_x.value + scroll_remainder_by_code[libevdev.EV_REL.REL_X]
+                    step = (1 / _SCROLL_FACTOR_FAST) if (prev_btn_right_event and prev_btn_right_event.value == 1) else (1 / _SCROLL_FACTOR)
+                    while direction * rem > step:
+                        yield libevdev.InputEvent(libevdev.EV_REL.REL_HWHEEL, direction)
+                        yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
+                        rem -= direction * step
+                    scroll_remainder_by_code[libevdev.EV_REL.REL_X] = rem
+                if event_y:
+                    direction = -1 if event_y.value < 0 else 1
+                    rem = event_y.value + scroll_remainder_by_code[libevdev.EV_REL.REL_Y]
+                    step = (1 / _SCROLL_FACTOR_FAST) if (prev_btn_right_event and prev_btn_right_event.value == 1) else (1 / _SCROLL_FACTOR)
+                    while direction * rem > step:
+                        # reversed on purpose
+                        yield libevdev.InputEvent(libevdev.EV_REL.REL_WHEEL, -direction)
+                        yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
+                        rem -= direction * step
+                    scroll_remainder_by_code[libevdev.EV_REL.REL_Y] = rem
             else:
-                yield event
+                if event_x:
+                    yield event_x
+                if event_y:
+                    yield event_y
                 yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
-        elif event.code == libevdev.EV_REL.REL_Y:
-            prev_btn_extra_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_EXTRA)
-            if (
-                prev_btn_extra_event
-                and prev_btn_extra_event.value == 1
-                and _event_occurrence_diff(event, prev_btn_extra_event) >= _SIDE_BUTTON_MODIFIER_DELAY
-            ):
-                prev_btn_right_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_RIGHT)
-                direction = -1 if event.value < 0 else 1
-                rem = event.value + scroll_remainder_by_code[libevdev.EV_REL.REL_Y]
-                step = (1 / _SCROLL_FACTOR_FAST) if (prev_btn_right_event and prev_btn_right_event.value == 1) else (1 / _SCROLL_FACTOR)
-                while direction * rem > step:
-                    # reversed on purpose
-                    yield libevdev.InputEvent(libevdev.EV_REL.REL_WHEEL, -direction)
-                    yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
-                    rem -= direction * step
-                scroll_remainder_by_code[libevdev.EV_REL.REL_Y] = rem
-            else:
-                yield event
-                yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
-        elif event.code == libevdev.EV_REL.REL_WHEEL:
+        if codes & {libevdev.EV_REL.REL_WHEEL}:
             prev_btn_side_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_SIDE)
+            event = next((e for e in events if e.code == libevdev.EV_REL.REL_WHEEL))
             if prev_btn_side_event and prev_btn_side_event.value == 1:
                 if event.value < 0:
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_LEFTCTRL, 1)
@@ -116,12 +114,13 @@ def run(log):
             else:
                 yield event
                 yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
-        elif event.code == libevdev.EV_REL.REL_HWHEEL:
-            yield event
+        if codes & {libevdev.EV_REL.REL_HWHEEL}:
+            yield next((e for e in events if e.code == libevdev.EV_REL.REL_HWHEEL))
             yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
         # button
-        elif event.code == libevdev.EV_KEY.BTN_LEFT:
+        if codes & {libevdev.EV_KEY.BTN_LEFT}:
             prev_btn_side_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_SIDE)
+            event = next((e for e in events if e.code == libevdev.EV_KEY.BTN_LEFT))
             if prev_btn_side_event and prev_btn_side_event.value == 1 and event.value == 1:
                 yield libevdev.InputEvent(libevdev.EV_KEY.KEY_LEFTMETA, 1)
                 yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
@@ -134,9 +133,10 @@ def run(log):
             else:
                 yield event
                 yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
-        elif event.code == libevdev.EV_KEY.BTN_RIGHT:
+        if codes & {libevdev.EV_KEY.BTN_RIGHT}:
             # suppress when modifier button is pressed to be used as a multi-button modifier
             prev_btn_extra_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_EXTRA)
+            event = next((e for e in events if e.code == libevdev.EV_KEY.BTN_RIGHT))
             if (
                 prev_btn_extra_event
                 and prev_btn_extra_event.value == 1
@@ -150,9 +150,10 @@ def run(log):
                     yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
             if event.value == 0 and suppress_release_by_code.get(event.code):
                 suppress_release_by_code[event.code] = False
-        elif event.code == libevdev.EV_KEY.BTN_MIDDLE:
+        if codes & {libevdev.EV_KEY.BTN_MIDDLE}:
             prev_btn_side_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_SIDE)
             prev_btn_extra_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_EXTRA)
+            event = next((e for e in events if e.code == libevdev.EV_KEY.BTN_MIDDLE))
             if prev_btn_side_event and prev_btn_side_event.value == 1:
                 if event.value == 1:
                     yield libevdev.InputEvent(libevdev.EV_KEY.KEY_LEFTCTRL, 1)
@@ -180,8 +181,9 @@ def run(log):
             else:
                 yield event
                 yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
-        elif event.code == libevdev.EV_KEY.BTN_SIDE:
+        if codes & {libevdev.EV_KEY.BTN_SIDE}:
             prev_btn_side_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_SIDE)
+            event = next((e for e in events if e.code == libevdev.EV_KEY.BTN_SIDE))
             if (
                 prev_btn_side_event
                 and prev_btn_side_event.value == 1
@@ -192,8 +194,9 @@ def run(log):
                 yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                 yield event
                 yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
-        elif event.code == libevdev.EV_KEY.BTN_EXTRA:
+        if codes & {libevdev.EV_KEY.BTN_EXTRA}:
             prev_btn_extra_event = prev_events_by_code.get(libevdev.EV_KEY.BTN_EXTRA)
+            event = next((e for e in events if e.code == libevdev.EV_KEY.BTN_EXTRA))
             if (
                 prev_btn_extra_event
                 and prev_btn_extra_event.value == 1
@@ -204,6 +207,15 @@ def run(log):
                 yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
                 yield event
                 yield libevdev.InputEvent(libevdev.EV_SYN.SYN_REPORT, 0)
-        prev_events_by_code[event.code] = event
+        for event in events:
+            prev_events_by_code[event.code] = event
+
+    buffer = []
+    def _transform_event(event: libevdev.InputEvent) -> Iterable[libevdev.InputEvent]:
+        nonlocal buffer
+        buffer.append(event)
+        if event.code == libevdev.EV_SYN.SYN_REPORT:
+            yield from _transform_events(buffer)
+            buffer = []
 
     return input_codes, output_codes, _transform_event
