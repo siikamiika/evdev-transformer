@@ -1,3 +1,4 @@
+- https://github.com/Alkaid-Benetnash/EmuBTHID
 - config
 - config graph -> generate node configs
     - visual editor
