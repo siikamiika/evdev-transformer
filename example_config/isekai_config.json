@@ -91,6 +91,16 @@
                 "vendor": 1739,
                 "product": 52705
             }
+        },
+        {
+            "name": "test remote multitouchpad",
+            "type": "evdev_unix_socket",
+            "transforms": [],
+            "properties": {
+                "host": "isekai",
+                "vendor": 76,
+                "product": 613
+            }
         }
     ],
     "source_groups": [
@@ -100,6 +110,7 @@
                 "Apple Inc. Magic Trackpad 2",
                 "Apple Inc. Magic Trackpad 2 (bluetooth)",
                 "JIS Keyboard",
+                "test remote multitouchpad",
                 "Logitech G305"
             ]
         },
