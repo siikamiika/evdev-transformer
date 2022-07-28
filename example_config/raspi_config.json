@@ -1,0 +1,63 @@
+{
+    "config_version": 1,
+    "sources": [
+        {
+            "name": "Logitech MX Keys Mini Mechanical Wireless",
+            "type": "evdev_udev",
+            "transforms": [],
+            "properties": {
+                "udev": {
+                    "ID_VENDOR_ID": "046d",
+                    "ID_MODEL_ID": "c548",
+                    "ID_INPUT_KEYBOARD": "1"
+                }
+            }
+        },
+        {
+            "name": "Logitech G305",
+            "type": "evdev_udev",
+            "transforms": [
+                {
+                    "type": "script",
+                    "properties": {
+                        "filename": "~/.local/lib/evdev_transformer/transforms/mouse_extra_features.py"
+                    }
+                }
+            ],
+            "properties": {
+                "udev": {
+                    "ID_VENDOR_ID": "046d",
+                    "ID_MODEL_ID": "c53f",
+                    "ID_INPUT_KEYBOARD": "1",
+                    "ID_INPUT_MOUSE": "1"
+                }
+            }
+        }
+    ],
+    "source_groups": [
+        {
+            "name": "Logi",
+            "sources": [
+                "Logitech MX Keys Mini Mechanical Wireless",
+                "Logitech G305"
+            ]
+        }
+    ],
+    "destinations": [
+        {
+            "name": "isekai",
+            "type": "subprocess",
+            "transforms": [],
+            "properties": {
+                "command": "ssh siikamiika@isekai.lan -- socat - UNIX-CONNECT:\"$XDG_RUNTIME_DIR\/evdev-ipc.sock\""
+            }
+        }
+    ],
+    "links": [
+        {
+            "source_group": "Logi",
+            "destination": "isekai",
+            "activators": []
+        }
+    ]
+}
