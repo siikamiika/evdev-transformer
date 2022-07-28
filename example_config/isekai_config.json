@@ -101,6 +101,26 @@
                 "vendor": 76,
                 "product": 613
             }
+        },
+        {
+            "name": "Logitech MX Keys Mini Mechanical Wireless (Remote)",
+            "type": "evdev_unix_socket",
+            "transforms": [],
+            "properties": {
+                "host": "raspberrypi",
+                "vendor": 1133,
+                "product": 50504
+            }
+        },
+        {
+            "name": "Logitech G305 (Remote)",
+            "type": "evdev_unix_socket",
+            "transforms": [],
+            "properties": {
+                "host": "raspberrypi",
+                "vendor": 1133,
+                "product": 16500
+            }
         }
     ],
     "source_groups": [
@@ -119,6 +139,13 @@
             "sources": [
                 "Chromebook Touchpad (Remote)",
                 "Chromebook Keyboard (Remote)"
+            ]
+        },
+        {
+            "name": "Raspberry Pi (Remote)",
+            "sources": [
+                "Logitech MX Keys Mini Mechanical Wireless (Remote)",
+                "Logitech G305 (Remote)"
             ]
         }
     ],
@@ -192,6 +219,11 @@
         },
         {
             "source_group": "Laptop (Remote)",
+            "destination": "Master",
+            "activators": []
+        },
+        {
+            "source_group": "Raspberry Pi (Remote)",
             "destination": "Master",
             "activators": []
         }
