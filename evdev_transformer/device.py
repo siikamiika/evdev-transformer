@@ -765,6 +765,5 @@ class HidGadgetDestinationDevice(DestinationDevice):
             def _send_report(self):
                 # TODO mouse report_id 0x02
                 with open('/dev/hidg0', 'wb') as f:
-                    f.write(bytes(0x01) + self._report)
-                log.debug(f'TODO HID report: {bytes([self._REPORT_ID]) + self._report}')
+                    f.write(bytes([0x01]) + self._report)
         return _HidGadgetDevice()
