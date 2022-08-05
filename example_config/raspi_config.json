@@ -12,6 +12,16 @@
             }
         },
         {
+            "name": "JIS Keyboard (Remote)",
+            "type": "evdev_unix_socket",
+            "transforms": [],
+            "properties": {
+                "host": "isekai",
+                "vendor": 1241,
+                "product": 17733
+            }
+        },
+        {
             "name": "Logitech G305 (Remote)",
             "type": "evdev_unix_socket",
             "transforms": [],
@@ -34,9 +44,10 @@
     ],
     "source_groups": [
         {
-            "name": "Logi (Remote)",
+            "name": "USB Bridge (Remote)",
             "sources": [
                 "Logitech MX Keys Mini Mechanical Wireless (Remote)",
+                "JIS Keyboard (Remote)",
                 "Logitech G305 (Remote)",
                 "ZOWIE Gaming mouse (Remote)"
             ]
@@ -52,7 +63,7 @@
     ],
     "links": [
         {
-            "source_group": "Logi (Remote)",
+            "source_group": "USB Bridge (Remote)",
             "destination": "HID Emu",
             "activators": []
         }
