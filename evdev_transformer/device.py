@@ -722,27 +722,56 @@ class HidGadgetDestinationDevice(DestinationDevice):
                 ('KEY_CALC',             0xfb),
             ]
         }
+        evdev_button_to_hid_code = {
+            libevdev.evbit(k): v for k, v in
+            [
+                ('BTN_LEFT',   0b00001),
+                ('BTN_RIGHT',  0b00010),
+                ('BTN_MIDDLE', 0b00100),
+                ('BTN_SIDE',   0b01000),
+                ('BTN_EXTRA',  0b10000),
+            ]
+        }
         class _HidGadgetDevice:
             _REPORT_ID = 0x01
             _HID_MODIFIER_BEGIN = 0xe0 # left control
             _HID_MODIFIER_END = 0xe7 # right meta
             def __init__(self):
-                self._report = bytearray(8)
-                self._modifier_byte = memoryview(self._report)[0:1]
+                # key
+                self._key_report = bytearray(8)
+                self._modifier_byte = memoryview(self._key_report)[0:1]
                 # byte 1 unused
-                self._key_bytes = memoryview(self._report)[2:]
+                self._key_bytes = memoryview(self._key_report)[2:]
+
+                # mouse
+                # report[0] buttons
+                # report[1] rel x
+                # report[2] rel y
+                # report[3] wheel
+                # report[4] hwheel
+                self._mouse_report = bytearray(5)
             def send_events(self, events: List[libevdev.InputEvent]):
                 for event in events:
                     if event.type == libevdev.EV_KEY:
-                        hid_code = evdev_key_to_hid_code.get(event.code)
-                        if hid_code is None:
-                            continue
-                        if event.value == 1:
-                            self._add_keycode_to_report(hid_code)
-                        elif event.value == 0:
-                            self._remove_keycode_from_report(hid_code)
-                        self._send_report()
-                # log.debug(events)
+                        if libevdev.EV_KEY.BTN_LEFT <= event.code <= libevdev.EV_KEY.BTN_EXTRA:
+                            hid_code = evdev_button_to_hid_code.get(event.code)
+                            if hid_code is None:
+                                continue
+                            if event.value == 1:
+                                self._mouse_report[0] |= hid_code
+                            elif event.value == 0:
+                                self._mouse_report[0] &= ~hid_code
+                            self._send_report(bytes([0x02]) + self._mouse_report)
+                        else:
+                            hid_code = evdev_key_to_hid_code.get(event.code)
+                            if hid_code is None:
+                                continue
+                            if event.value == 1:
+                                self._add_keycode_to_report(hid_code)
+                            elif event.value == 0:
+                                self._remove_keycode_from_report(hid_code)
+                            self._send_report(bytes([0x01]) + self._key_report)
+                    # TODO EV_REL
             def _add_keycode_to_report(self, code):
                 if self._HID_MODIFIER_BEGIN <= code <= self._HID_MODIFIER_END:
                     self._modifier_byte[0] |= 1 << (code - self._HID_MODIFIER_BEGIN)
@@ -762,8 +791,7 @@ class HidGadgetDestinationDevice(DestinationDevice):
                 for i in range(6):
                     if self._key_bytes[i] == code:
                         self._key_bytes[i] = 0
-            def _send_report(self):
-                # TODO mouse report_id 0x02
+            def _send_report(self, report):
                 with open('/dev/hidg0', 'wb') as f:
-                    f.write(bytes([0x01]) + self._report)
+                    f.write(report)
         return _HidGadgetDevice()
