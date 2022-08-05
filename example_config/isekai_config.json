@@ -92,6 +92,25 @@
             }
         },
         {
+            "name": "ZOWIE Gaming mouse",
+            "type": "evdev_udev",
+            "transforms": [
+                {
+                    "type": "script",
+                    "properties": {
+                        "filename": "~/.local/lib/evdev_transformer/transforms/mouse_extra_features.py"
+                    }
+                }
+            ],
+            "properties": {
+                "udev": {
+                    "ID_VENDOR_ID": "1af3",
+                    "ID_MODEL_ID": "0001",
+                    "ID_INPUT_MOUSE": "1"
+                }
+            }
+        },
+        {
             "name": "Chromebook Keyboard (Remote)",
             "type": "evdev_unix_socket",
             "transforms": [],
@@ -151,7 +170,8 @@
                 "JIS Keyboard",
                 "Logitech MX Keys Mini Mechanical Wireless",
                 "test remote multitouchpad",
-                "Logitech G305"
+                "Logitech G305",
+                "ZOWIE Gaming mouse"
             ]
         },
         {

@@ -20,6 +20,16 @@
                 "vendor": 1133,
                 "product": 16500
             }
+        },
+        {
+            "name": "ZOWIE Gaming mouse (Remote)",
+            "type": "evdev_unix_socket",
+            "transforms": [],
+            "properties": {
+                "host": "isekai",
+                "vendor": 6899,
+                "product": 1
+            }
         }
     ],
     "source_groups": [
@@ -27,7 +37,8 @@
             "name": "Logi (Remote)",
             "sources": [
                 "Logitech MX Keys Mini Mechanical Wireless (Remote)",
-                "Logitech G305 (Remote)"
+                "Logitech G305 (Remote)",
+                "ZOWIE Gaming mouse (Remote)"
             ]
         }
     ],
