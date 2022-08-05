@@ -165,6 +165,14 @@
             }
         },
         {
+            "name": "virtuales",
+            "type": "subprocess",
+            "transforms": [],
+            "properties": {
+                "command": "ssh virtuales.lan -- win_scancode_input"
+            }
+        },
+        {
             "name": "HID Emu",
             "type": "hid_gadget",
             "transforms": [],
@@ -189,22 +197,7 @@
         },
         {
             "source_group": "🍎",
-            "destination": "es",
-            "activators": [
-                {
-                    "type": "hotkey",
-                    "properties": {
-                        "hotkey": {
-                            "key": "KEY_TAB",
-                            "modifiers": ["KEY_LEFTMETA"]
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "source_group": "🍎",
-            "destination": "HID Emu",
+            "destination": "virtuales",
             "activators": [
                 {
                     "type": "hotkey",
@@ -226,6 +219,21 @@
             "source_group": "Raspberry Pi (Remote)",
             "destination": "Master",
             "activators": []
+        },
+        {
+            "source_group": "Raspberry Pi (Remote)",
+            "destination": "HID Emu",
+            "activators": [
+                {
+                    "type": "hotkey",
+                    "properties": {
+                        "hotkey": {
+                            "key": "KEY_TAB",
+                            "modifiers": ["KEY_LEFTMETA"]
+                        }
+                    }
+                }
+            ]
         }
     ]
 }
