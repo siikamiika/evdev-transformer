@@ -53,6 +53,25 @@
             }
         },
         {
+            "name": "Logitech MX Keys Mini Mechanical Wireless",
+            "type": "evdev_udev",
+            "transforms": [
+                {
+                    "type": "script",
+                    "properties": {
+                        "filename": "~/.local/lib/evdev_transformer/transforms/right_alt_navigation_keys.py"
+                    }
+                }
+            ],
+            "properties": {
+                "udev": {
+                    "ID_VENDOR_ID": "046d",
+                    "ID_MODEL_ID": "c548",
+                    "ID_INPUT_KEYBOARD": "1"
+                }
+            }
+        },
+        {
             "name": "Logitech G305",
             "type": "evdev_udev",
             "transforms": [
@@ -130,6 +149,7 @@
                 "Apple Inc. Magic Trackpad 2",
                 "Apple Inc. Magic Trackpad 2 (bluetooth)",
                 "JIS Keyboard",
+                "Logitech MX Keys Mini Mechanical Wireless",
                 "test remote multitouchpad",
                 "Logitech G305"
             ]
@@ -165,6 +185,14 @@
             }
         },
         {
+            "name": "raspberrypi",
+            "type": "subprocess",
+            "transforms": [],
+            "properties": {
+                "command": "ssh pi@raspberrypi.lan -- socat - UNIX-CONNECT:\"$XDG_RUNTIME_DIR\/evdev-ipc.sock\""
+            }
+        },
+        {
             "name": "virtuales",
             "type": "subprocess",
             "transforms": [],
@@ -197,7 +225,7 @@
         },
         {
             "source_group": "🍎",
-            "destination": "virtuales",
+            "destination": "raspberrypi",
             "activators": [
                 {
                     "type": "hotkey",

@@ -2,61 +2,47 @@
     "config_version": 1,
     "sources": [
         {
-            "name": "Logitech MX Keys Mini Mechanical Wireless",
-            "type": "evdev_udev",
+            "name": "Logitech MX Keys Mini Mechanical Wireless (Remote)",
+            "type": "evdev_unix_socket",
             "transforms": [],
             "properties": {
-                "udev": {
-                    "ID_VENDOR_ID": "046d",
-                    "ID_MODEL_ID": "c548",
-                    "ID_INPUT_KEYBOARD": "1"
-                }
+                "host": "isekai",
+                "vendor": 1133,
+                "product": 50504
             }
         },
         {
-            "name": "Logitech G305",
-            "type": "evdev_udev",
-            "transforms": [
-                {
-                    "type": "script",
-                    "properties": {
-                        "filename": "~/.local/lib/evdev_transformer/transforms/mouse_extra_features.py"
-                    }
-                }
-            ],
+            "name": "Logitech G305 (Remote)",
+            "type": "evdev_unix_socket",
+            "transforms": [],
             "properties": {
-                "udev": {
-                    "ID_VENDOR_ID": "046d",
-                    "ID_MODEL_ID": "c53f",
-                    "ID_INPUT_KEYBOARD": "1",
-                    "ID_INPUT_MOUSE": "1"
-                }
+                "host": "isekai",
+                "vendor": 1133,
+                "product": 16500
             }
         }
     ],
     "source_groups": [
         {
-            "name": "Logi",
+            "name": "Logi (Remote)",
             "sources": [
-                "Logitech MX Keys Mini Mechanical Wireless",
-                "Logitech G305"
+                "Logitech MX Keys Mini Mechanical Wireless (Remote)",
+                "Logitech G305 (Remote)"
             ]
         }
     ],
     "destinations": [
         {
-            "name": "isekai",
-            "type": "subprocess",
+            "name": "HID Emu",
+            "type": "hid_gadget",
             "transforms": [],
-            "properties": {
-                "command": "ssh siikamiika@isekai.lan -- socat - UNIX-CONNECT:\"$XDG_RUNTIME_DIR\/evdev-ipc.sock\""
-            }
+            "properties": {}
         }
     ],
     "links": [
         {
-            "source_group": "Logi",
-            "destination": "isekai",
+            "source_group": "Logi (Remote)",
+            "destination": "HID Emu",
             "activators": []
         }
     ]
