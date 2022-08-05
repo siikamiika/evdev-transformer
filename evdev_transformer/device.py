@@ -789,6 +789,10 @@ class HidGadgetDestinationDevice(DestinationDevice):
                                 self._remove_keycode_from_report(hid_code)
                             keys_changed = True
                 if rel_x_val or rel_y_val or rel_wheel_val or rel_hwheel_val:
+                    self._mouse_report[1] = rel_x_val & 0xff
+                    self._mouse_report[2] = rel_y_val & 0xff
+                    self._mouse_report[3] = rel_wheel_val & 0xff
+                    self._mouse_report[4] = rel_hwheel_val & 0xff
                     mouse_changed = True
                 if keys_changed:
                     self._send_report(bytes([self._REPORT_ID_KEY]) + self._key_report)
