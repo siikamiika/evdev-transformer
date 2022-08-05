@@ -733,7 +733,8 @@ class HidGadgetDestinationDevice(DestinationDevice):
             ]
         }
         class _HidGadgetDevice:
-            _REPORT_ID = 0x01
+            _REPORT_ID_KEY = 0x01
+            _REPORT_ID_MOUSE = 0x02
             _HID_MODIFIER_BEGIN = 0xe0 # left control
             _HID_MODIFIER_END = 0xe7 # right meta
             def __init__(self):
@@ -751,27 +752,51 @@ class HidGadgetDestinationDevice(DestinationDevice):
                 # report[4] hwheel
                 self._mouse_report = bytearray(5)
             def send_events(self, events: List[libevdev.InputEvent]):
+                key_event = None
+                rel_x_val = 0
+                rel_y_val = 0
+                rel_wheel_val = 0
+                rel_hwheel_val = 0
                 for event in events:
                     if event.type == libevdev.EV_KEY:
-                        if libevdev.EV_KEY.BTN_LEFT <= event.code <= libevdev.EV_KEY.BTN_EXTRA:
-                            hid_code = evdev_button_to_hid_code.get(event.code)
-                            if hid_code is None:
-                                continue
-                            if event.value == 1:
+                        key_event = event
+                    elif event.type == libevdev.EV_REL:
+                        if event.code == libevdev.EV_REL.REL_X:
+                            rel_x_val = event.value
+                        elif event.code == libevdev.EV_REL.REL_Y:
+                            rel_y_val = event.value
+                        elif event.code in {libevdev.EV_REL.REL_WHEEL, libevdev.EV_REL.REL_WHEEL_HI_RES}:
+                            rel_wheel_val = event.value
+                        elif event.code in {libevdev.EV_REL.REL_HWHEEL, libevdev.EV_REL.REL_HWHEEL_HI_RES}:
+                            rel_hwheel_val = event.value
+                keys_changed = False
+                mouse_changed = False
+                if key_event:
+                    if libevdev.EV_KEY.BTN_LEFT <= key_event.code <= libevdev.EV_KEY.BTN_EXTRA:
+                        hid_code = evdev_button_to_hid_code.get(key_event.code)
+                        if hid_code is not None:
+                            if key_event.value == 1:
                                 self._mouse_report[0] |= hid_code
-                            elif event.value == 0:
+                            elif key_event.value == 0:
                                 self._mouse_report[0] &= ~hid_code
-                            self._send_report(bytes([0x02]) + self._mouse_report)
-                        else:
-                            hid_code = evdev_key_to_hid_code.get(event.code)
-                            if hid_code is None:
-                                continue
-                            if event.value == 1:
+                            mouse_changed = True
+                    else:
+                        hid_code = evdev_key_to_hid_code.get(key_event.code)
+                        if hid_code is not None:
+                            if key_event.value == 1:
                                 self._add_keycode_to_report(hid_code)
-                            elif event.value == 0:
+                            elif key_event.value == 0:
                                 self._remove_keycode_from_report(hid_code)
-                            self._send_report(bytes([0x01]) + self._key_report)
-                    # TODO EV_REL
+                            keys_changed = True
+                if rel_x_val or rel_y_val or rel_wheel_val or rel_hwheel_val:
+                    mouse_changed = True
+                if keys_changed:
+                    self._send_report(bytes([self._REPORT_ID_KEY]) + self._key_report)
+                if mouse_changed:
+                    self._send_report(bytes([self._REPORT_ID_MOUSE]) + self._mouse_report)
+                    # reset relative event bits
+                    for i in range(1, 5):
+                        self._mouse_report[i] = 0
             def _add_keycode_to_report(self, code):
                 if self._HID_MODIFIER_BEGIN <= code <= self._HID_MODIFIER_END:
                     self._modifier_byte[0] |= 1 << (code - self._HID_MODIFIER_BEGIN)
