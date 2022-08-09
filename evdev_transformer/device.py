@@ -543,6 +543,8 @@ class SubprocessDestinationDevice(DestinationDevice):
                 return handle
         return _SubprocessDevice(self._properties['command'], self._serialize())
 
+import base64
+hidg0proc = None
 class HidGadgetDestinationDevice(DestinationDevice):
     # TODO
     # https://github.com/siikamiika/hid-emu
@@ -821,6 +823,16 @@ class HidGadgetDestinationDevice(DestinationDevice):
                     if self._key_bytes[i] == code:
                         self._key_bytes[i] = 0
             def _send_report(self, report):
-                with open('/dev/hidg0', 'wb') as f:
-                    f.write(report)
+                global hidg0proc
+                if hidg0proc is None:
+                    hidg0proc = subprocess.Popen([
+                        'ssh',
+                        'pi@raspberrypi.lan',
+                        '--',
+                        'python3 -c \'import sys;import base64;exec("for line in sys.stdin:\\n with open(\\"/dev/hidg0\\", \\"wb\\") as f:\\n  f.write(base64.b64decode(line))")\''
+                    ], stdin=subprocess.PIPE)
+                hidg0proc.stdin.write(base64.b64encode(report) + b'\n')
+                hidg0proc.stdin.flush()
+                # with open('/dev/hidg0', 'wb') as f:
+                #     f.write(report)
         return _HidGadgetDevice()

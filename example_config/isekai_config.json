@@ -245,7 +245,7 @@
         },
         {
             "source_group": "🍎",
-            "destination": "raspberrypi",
+            "destination": "HID Emu",
             "activators": [
                 {
                     "type": "hotkey",
